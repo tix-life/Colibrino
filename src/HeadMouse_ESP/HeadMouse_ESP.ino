@@ -4,11 +4,8 @@
 #include <BleMouse.h>
 //Carrega a biblioteca Wire
 #include <Wire.h>
-
-const int MPU_addr=0x68;  // I2C address of the MPU-6050
-int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
-
-BleMouse bleMouse;
+#include "filters.h"
+#include "MahonyAHRS.h"
 //---------------------------------------------------------------------------------------------------
 
 // Definitions
@@ -392,8 +389,24 @@ BleMouse bleMouse;
 #define MPU6050_DMP_MEMORY_BANKS        8
 #define MPU6050_DMP_MEMORY_BANK_SIZE    256
 #define MPU6050_DMP_MEMORY_CHUNK_SIZE   16
+//Filtro
+#define NZEROS6 6
+#define NPOLES6 6
+#define GAIN6   2.664923303e+11
+//
+#define SENSITIVITY  35;
+/*********************************************************************
+ * Global variables
+ */
+float axR, ayR, azR, gxR, gyR, gzR;
+float axg, ayg, azg, gxrs, gyrs, gzrs;
+float ax_filtro, ay_filtro, az_filtro, gx_filtro, gy_filtro, gz_filtro;
+//float yaw_filtro, pitch_filtro, roll_filtro;
+const int MPU_addr=0x68;  // I2C address of the MPU-6050
+int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
+extern float yaw_mahony,pitch_mahony,roll_mahony;
 
-
+BleMouse bleMouse;
 
 void MPU6050_Init(){
   // MPU6050 Initializing & Reset
@@ -410,14 +423,14 @@ void MPU6050_Init(){
      Wire.write(0x08); // FS_SEL=1, Full Scale Range = +/- 500 [degree/sec]
      Wire.write(0x10); // FS_SEL=2, Full Scale Range = +/- 1000 [degree/sec]
      Wire.write(0x18); // FS_SEL=3, Full Scale Range = +/- 2000 [degree/sec]   */
-  writeByte(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_GYRO_CONFIG, 0x18); // FS_SEL=3
+  writeByte(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_GYRO_CONFIG, 0x00); // FS_SEL=0
 
   // MPU6050 Accelerometer Configuration Setting
   /* Wire.write(0x00); // AFS_SEL=0, Full Scale Range = +/- 2 [g]
      Wire.write(0x08); // AFS_SEL=1, Full Scale Range = +/- 4 [g]
      Wire.write(0x10); // AFS_SEL=2, Full Scale Range = +/- 8 [g]
      Wire.write(0x18); // AFS_SEL=3, Full Scale Range = +/- 10 [g] */
-  writeByte(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_ACCEL_CONFIG, 0x10); // AFS_SEL=2
+  writeByte(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_ACCEL_CONFIG, 0x00); // AFS_SEL=0
 
   // MPU6050 DLPF(Digital Low Pass Filter)
   /*Wire.write(0x00);     // Accel BW 260Hz, Delay 0ms / Gyro BW 256Hz, Delay 0.98ms, Fs 8KHz 
@@ -427,7 +440,7 @@ void MPU6050_Init(){
     Wire.write(0x04);     // Accel BW 21Hz, Delay 8.5ms / Gyro BW 20Hz, Delay 8.3ms, Fs 1KHz 
     Wire.write(0x05);     // Accel BW 10Hz, Delay 13.8ms / Gyro BW 10Hz, Delay 13.4ms, Fs 1KHz 
     Wire.write(0x06);     // Accel BW 5Hz, Delay 19ms / Gyro BW 5Hz, Delay 18.6ms, Fs 1KHz */
-  writeByte(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_CONFIG, 0x00); //Accel BW 260Hz, Delay 0ms / Gyro BW 256Hz, Delay 0.98ms, Fs 8KHz
+  // writeByte(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_CONFIG, 0x00); //Accel BW 260Hz, Delay 0ms / Gyro BW 256Hz, Delay 0.98ms, Fs 8KHz
 }
 
 void writeByte(uint8_t address, uint8_t subAddress, uint8_t data)
@@ -489,16 +502,94 @@ void setup()
 
   //delay(1000);
 }
-void loop() 
+filters pbax,pbay,pbaz,pbgx,pbgy,pbgz;
+#define MPU6050_ACC_GAIN 16384.0
+#define MPU6050_GYRO_GAIN 131.072 
+void filtraIMU()
+{
+  //Filtro 2 ordem
+  ax_filtro= filtro_2PB4Hz(AcX, pbax);
+  ay_filtro= filtro_2PB4Hz(AcY, pbay);
+  az_filtro= filtro_2PB4Hz(AcZ, pbaz);
+  gx_filtro= filtro_2PB4Hz(GyX, pbgx);
+  gy_filtro= filtro_2PB4Hz(GyY, pbgy);
+  gz_filtro= filtro_2PB4Hz(GyZ, pbgz);
+  
+  //Converte
+  axg = (float)(ax_filtro /*- LSM6DSM_AXOFFSET*/) / MPU6050_ACC_GAIN;
+  ayg = (float)(ay_filtro /*- LSM6DSM_AYOFFSET*/) / MPU6050_ACC_GAIN;
+  azg = (float)(az_filtro /*- LSM6DSM_AZOFFSET*/) / MPU6050_ACC_GAIN;
+  gxrs = (float)(gx_filtro - 0) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
+  gyrs = (float)(gy_filtro - 0) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
+  gzrs = (float)(gz_filtro - 0) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
+  // Degree to Radians Pi / 180 = 0.01745329 0.01745329251994329576923690768489
+}
+uint8_t mouseHoriz(void)
+{
+  static float horzZero =0.0f;
+  static float horzValue = 0.0f;  // Stores current analog output of each axis
+ 
+  if(horzValue == 0 )
+  {
+    horzValue = 0;
+  }
+  else
+  {
+    horzValue = (yaw_mahony - horzZero)*SENSITIVITY;
+    horzZero = yaw_mahony;
+  }
+  return horzValue;
+}
+uint8_t mouseVert(void)
 {
 
+  static float vertZero =0.0f;
+  static float vertValue = 0.0f;  // Stores current analog output of each axis
+
+  if(vertValue == 0 )
+  {
+    vertValue = 0;
+  }
+  else
+  {
+    vertValue = (-1)*(pitch_mahony - vertZero)*SENSITIVITY;
+    vertZero = pitch_mahony;
+  }
+    
+  return vertValue;
+}
+void loop() 
+{
+  static int printDivider = 10;
    // Get raw data
   //
+  uint8_t xchg = 0,ychg = 0;
+
   if(bleMouse.isConnected()) 
   {
     mpu6050_GetData();
-    // Serial.println("Scroll Down");
-    bleMouse.move(GyX,GyY,0);
+    filtraIMU();
+    MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
+    getRollPitchYaw_mahony();
+    xchg = mouseHoriz();
+    ychg = mouseVert();
+    bleMouse.move(xchg,ychg,0);
   }
- delay(100);
+  // if(--printDivider ==0)
+  // {
+  //   printDivider = 10;
+  //   Serial.print(axg);
+  //   Serial.print(" ");
+  //   Serial.print(ayg);
+  //   Serial.print(" ");
+  //   Serial.print(azg);
+  //   Serial.print(" ");
+  //   Serial.print(gxrs);
+  //   Serial.print(" ");
+  //   Serial.print(gyrs);
+  //   Serial.print(" ");
+  //   Serial.print(gzrs);
+  //   Serial.println("");
+  // }
+ //delay(10);
 }
