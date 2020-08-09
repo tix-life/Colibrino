@@ -55,32 +55,18 @@ uint8_t mouseHoriz(void)
   static float horzZero =0.0f;
   static float horzValue = 0.0f;  // Stores current analog output of each axis
  
-  if(horzValue == 0 )
-  {
-    horzValue = 0;
-  }
-  else
-  {
-    horzValue = (yaw_mahony - horzZero)*SENSITIVITY;
-    horzZero = yaw_mahony;
-  }
+  horzValue = (yaw_mahony - horzZero)*SENSITIVITY;
+  horzZero = yaw_mahony;
+
   return horzValue;
 }
 uint8_t mouseVert(void)
 {
-
   static float vertZero =0.0f;
   static float vertValue = 0.0f;  // Stores current analog output of each axis
-
-  if(vertValue == 0 )
-  {
-    vertValue = 0;
-  }
-  else
-  {
-    vertValue = (-1)*(pitch_mahony - vertZero)*SENSITIVITY;
-    vertZero = pitch_mahony;
-  }
+ 
+  vertValue = (-1)*(pitch_mahony - vertZero)*SENSITIVITY;
+  vertZero = pitch_mahony;
     
   return vertValue;
 }
@@ -104,17 +90,9 @@ void loop()
   MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
   getRollPitchYaw_mahony();
 
-  if(bleMouse.isConnected()) 
+  if(--printDivider ==0)
   {
-    
-    xchg = mouseHoriz();
-    ychg = mouseVert();
-    bleMouse.move(xchg,ychg,0);
-  }
-
-  // if(--printDivider ==0)
-  // {
-  //   printDivider = 10;
+    printDivider = 10;
   //   Serial.print(yaw_mahony);
   //   Serial.print(" ");
   //   Serial.print(pitch_mahony);
@@ -127,6 +105,12 @@ void loop()
   //   // Serial.print(" ");
   //   // Serial.print(GyZ);
   //   Serial.println("");
-  // }
+    if(bleMouse.isConnected()) 
+    {
+      xchg = mouseHoriz();
+      ychg = mouseVert();
+      bleMouse.move(xchg,ychg,0);
+    }
+  }
 //  delay(10);
 }
