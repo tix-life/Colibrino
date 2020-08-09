@@ -15,6 +15,6 @@ class filters
   
 };
 
-float filtro_2PB4Hz(float sinal,  filters filter);
+float filtro_2PB10Hz(float sinal,  filters filter);
 
 #endif /*FILTERS_H*/
