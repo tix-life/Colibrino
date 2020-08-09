@@ -45,9 +45,9 @@ void filtraIMU()
   axg = (float)(AcX /*- LSM6DSM_AXOFFSET*/) / MPU6050_ACC_GAIN;
   ayg = (float)(AcY /*- LSM6DSM_AYOFFSET*/) / MPU6050_ACC_GAIN;
   azg = (float)(AcZ /*- LSM6DSM_AZOFFSET*/) / MPU6050_ACC_GAIN;
-  gxrs = (float)(GyX - 0) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
-  gyrs = (float)(GyY - 0) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
-  gzrs = (float)(GyZ - 0) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
+  gxrs = (float)(GyX - (-143)) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
+  gyrs = (float)(GyY - (245)) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
+  gzrs = (float)(GyZ - (25)) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
   // Degree to Radians Pi / 180 = 0.01745329 0.01745329251994329576923690768489
 }
 uint8_t mouseHoriz(void)
@@ -87,7 +87,7 @@ uint8_t mouseVert(void)
 
 void setup() 
 {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   //Serial.println("Starting BLE work!");
   bleMouse.begin();
   Wire.begin();
@@ -107,26 +107,26 @@ void loop()
   if(bleMouse.isConnected()) 
   {
     
-    // xchg = mouseHoriz();
-    // ychg = mouseVert();
-    // bleMouse.move(xchg,ychg,0);
+    xchg = mouseHoriz();
+    ychg = mouseVert();
+    bleMouse.move(xchg,ychg,0);
   }
 
-  if(--printDivider ==0)
-  {
-    printDivider = 10;
-    Serial.print(yaw_mahony);
-    Serial.print(" ");
-    Serial.print(pitch_mahony);
-    Serial.print(" ");
-    Serial.print(roll_mahony);
-    Serial.print(" ");
-    // Serial.print(GyX);
-    // Serial.print(" ");
-    // Serial.print(GyY);
-    // Serial.print(" ");
-    // Serial.print(GyZ);
-    Serial.println("");
-  }
+  // if(--printDivider ==0)
+  // {
+  //   printDivider = 10;
+  //   Serial.print(yaw_mahony);
+  //   Serial.print(" ");
+  //   Serial.print(pitch_mahony);
+  //   Serial.print(" ");
+  //   Serial.print(roll_mahony);
+  //   Serial.print(" ");
+  //   // Serial.print(GyX);
+  //   // Serial.print(" ");
+  //   // Serial.print(GyY);
+  //   // Serial.print(" ");
+  //   // Serial.print(GyZ);
+  //   Serial.println("");
+  // }
 //  delay(10);
 }
