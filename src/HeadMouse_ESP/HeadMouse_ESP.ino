@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------------------------------
 //Definitions
 //Mouse
-#define SENSITIVITY  35;
+#define SENSITIVITY  50;
 //
 #define MPU6050_ACC_GAIN 16384.0
 #define MPU6050_GYRO_GAIN 131.072 
@@ -17,7 +17,8 @@
  */
 float axR, ayR, azR, gxR, gyR, gzR;
 float axg, ayg, azg, gxrs, gyrs, gzrs;
-float ax_filtro, ay_filtro, az_filtro, gx_filtro, gy_filtro, gz_filtro;
+//float ax_filtro, ay_filtro, az_filtro, gx_filtro, gy_filtro, gz_filtro;
+bool conectado = false;
 //float yaw_filtro, pitch_filtro, roll_filtro;
 const int MPU_addr=0x68;  // I2C address of the MPU-6050
 /*********************************************************************
@@ -54,20 +55,30 @@ uint8_t mouseHoriz(void)
 {
   static float horzZero =0.0f;
   static float horzValue = 0.0f;  // Stores current analog output of each axis
- 
+
+  if(!conectado)
+  {
+    horzZero =0.0f; 
+    horzValue = 0.0f;
+  }  
+
   horzValue = (yaw_mahony - horzZero)*SENSITIVITY;
   horzZero = yaw_mahony;
-
+  
   return horzValue;
 }
 uint8_t mouseVert(void)
 {
   static float vertZero =0.0f;
   static float vertValue = 0.0f;  // Stores current analog output of each axis
- 
+  if(!conectado)
+  {
+    vertValue =0.0f; 
+    vertZero = 0.0f;
+  } 
   vertValue = (-1)*(pitch_mahony - vertZero)*SENSITIVITY;
   vertZero = pitch_mahony;
-    
+
   return vertValue;
 }
 
@@ -80,37 +91,71 @@ void setup()
   Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
   MPU6050_Init();
 }
+enum
+{
+  Estado_Inicio = 0,
+  Estado_Conectado,
+  Estado_Reseta,
+};
 void loop() 
 {
   static int printDivider = 10;
+  static int estado = 0;
   uint8_t xchg = 0,ychg = 0;
-
   mpu6050_GetData();
   filtraIMU();
   MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
   getRollPitchYaw_mahony();
+  xchg = mouseHoriz();
+  ychg = mouseVert();
+  bleMouse.move(xchg,ychg,0);
 
-  if(--printDivider ==0)
+  if(bleMouse.isConnected()) 
   {
-    printDivider = 10;
-  //   Serial.print(yaw_mahony);
-  //   Serial.print(" ");
-  //   Serial.print(pitch_mahony);
-  //   Serial.print(" ");
-  //   Serial.print(roll_mahony);
-  //   Serial.print(" ");
-  //   // Serial.print(GyX);
-  //   // Serial.print(" ");
-  //   // Serial.print(GyY);
-  //   // Serial.print(" ");
-  //   // Serial.print(GyZ);
-  //   Serial.println("");
-    if(bleMouse.isConnected()) 
-    {
-      xchg = mouseHoriz();
-      ychg = mouseVert();
-      bleMouse.move(xchg,ychg,0);
-    }
+    conectado = true;
   }
+  else
+  {
+    conectado = false;
+  }
+  switch (estado)
+  {
+    case Estado_Inicio:
+      if(conectado)
+      {
+        estado = Estado_Conectado;
+      }
+      break;
+    case Estado_Conectado:
+      if(!conectado)
+      {
+        estado = Estado_Reseta;
+      } 
+      break;
+    case Estado_Reseta:
+      estado = Estado_Inicio;
+      ESP.restart();
+      break;
+    default:
+      break;
+  }
+  
+  // if(--printDivider ==0)
+  // {
+  //   printDivider = 10;
+  //   Serial.print(AcX);
+  //   Serial.print(" ");
+  //   Serial.print(AcY);
+  //   Serial.print(" ");
+  //   Serial.print(AcZ);
+  //   Serial.print(" ");
+  //   Serial.print(GyX);
+  //   Serial.print(" ");
+  //   Serial.print(GyY);
+  //   Serial.print(" ");
+  //   Serial.print(GyZ);
+  //   Serial.println("");
+  // }
+    
 //  delay(10);
 }
