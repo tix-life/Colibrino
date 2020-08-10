@@ -76,12 +76,12 @@ uint8_t mouseVert(void)
     vertValue =0.0f; 
     vertZero = 0.0f;
   } 
-  vertValue = (-1)*(pitch_mahony - vertZero)*SENSITIVITY;
+  vertValue = (pitch_mahony - vertZero)*SENSITIVITY;
   vertZero = pitch_mahony;
 
   return vertValue;
 }
-
+#define ACIONADOR 34
 void setup() 
 {
   //Serial.begin(115200);
@@ -90,6 +90,7 @@ void setup()
   Wire.begin();
   Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
   MPU6050_Init();
+  pinMode(ACIONADOR,INPUT);
 }
 enum
 {
@@ -102,6 +103,15 @@ void loop()
   static int printDivider = 10;
   static int estado = 0;
   uint8_t xchg = 0,ychg = 0;
+  bool estadoAcionador = false;
+
+  estadoAcionador = digitalRead(ACIONADOR);
+
+  if(!estadoAcionador)
+  {
+    bleMouse.click(MOUSE_LEFT);
+  }
+  
   mpu6050_GetData();
   filtraIMU();
   MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
@@ -109,6 +119,7 @@ void loop()
   xchg = mouseHoriz();
   ychg = mouseVert();
   bleMouse.move(xchg,ychg,0);
+  
 
   if(bleMouse.isConnected()) 
   {
