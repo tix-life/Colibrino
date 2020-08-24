@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------------------------------
 //Definitions
 //Mouse
-#define SENSITIVITY  50;
+#define SENSITIVITY  35;
 //
 #define MPU6050_ACC_GAIN 16384.0
 #define MPU6050_GYRO_GAIN 131.072 
@@ -29,8 +29,6 @@ extern float yaw_mahony,pitch_mahony,roll_mahony;
 //Objects
 BleMouse bleMouse;
 filters pbax,pbay,pbaz,pbgx,pbgy,pbgz;
-
-
 
 void filtraIMU()
 {
@@ -55,12 +53,7 @@ uint8_t mouseHoriz(void)
 {
   static float horzZero =0.0f;
   static float horzValue = 0.0f;  // Stores current analog output of each axis
-
-  if(!conectado)
-  {
-    horzZero =0.0f; 
-    horzValue = 0.0f;
-  }  
+  
 
   horzValue = (yaw_mahony - horzZero)*SENSITIVITY;
   horzZero = yaw_mahony;
@@ -71,11 +64,7 @@ uint8_t mouseVert(void)
 {
   static float vertZero =0.0f;
   static float vertValue = 0.0f;  // Stores current analog output of each axis
-  if(!conectado)
-  {
-    vertValue =0.0f; 
-    vertZero = 0.0f;
-  } 
+ 
   vertValue = (pitch_mahony - vertZero)*SENSITIVITY;
   vertZero = pitch_mahony;
 
@@ -84,7 +73,7 @@ uint8_t mouseVert(void)
 #define ACIONADOR 34
 void setup() 
 {
-  //Serial.begin(115200);
+  Serial.begin(115200);
   //Serial.println("Starting BLE work!");
   bleMouse.begin();
   Wire.begin();
@@ -94,9 +83,8 @@ void setup()
 }
 enum
 {
-  Estado_Inicio = 0,
-  Estado_Conectado,
-  Estado_Reseta,
+  Estado_LeBotao = 0,
+  Estado_Clica,
 };
 void loop() 
 {
@@ -104,69 +92,74 @@ void loop()
   static int estado = 0;
   uint8_t xchg = 0,ychg = 0;
   bool estadoAcionador = false;
+  static int contador = 0;
 
   estadoAcionador = digitalRead(ACIONADOR);
-
-  if(!estadoAcionador)
-  {
-    bleMouse.click(MOUSE_LEFT);
-  }
-  
   mpu6050_GetData();
   filtraIMU();
   MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
   getRollPitchYaw_mahony();
   xchg = mouseHoriz();
   ychg = mouseVert();
-  bleMouse.move(xchg,ychg,0);
   
-
   if(bleMouse.isConnected()) 
   {
-    conectado = true;
+    switch (estado)
+    {
+      case Estado_LeBotao:
+        if(estadoAcionador  == false)
+        {
+          contador++;
+          if(contador >= 10)
+          {
+            estado = Estado_Clica;
+            contador = 0;
+          }
+        }
+        else
+        {
+          contador = 0; 
+        }
+        break;
+      case Estado_Clica:
+        if(estadoAcionador  == true)
+        {
+          bleMouse.click(MOUSE_LEFT);
+          estado = Estado_LeBotao;
+        }
+        break;
+      
+      default:
+        break;
+    }
+    
+   
+    bleMouse.move(xchg,ychg,0);
   }
   else
   {
     conectado = false;
   }
-  switch (estado)
+ 
+  if(--printDivider ==0)
   {
-    case Estado_Inicio:
-      if(conectado)
-      {
-        estado = Estado_Conectado;
-      }
-      break;
-    case Estado_Conectado:
-      if(!conectado)
-      {
-        estado = Estado_Reseta;
-      } 
-      break;
-    case Estado_Reseta:
-      estado = Estado_Inicio;
-      ESP.restart();
-      break;
-    default:
-      break;
+    printDivider = 10;
+    // Serial.print(pitch_mahony);
+    // Serial.print(" ");
+    // Serial.print(yaw_mahony);
+    Serial.print(AcX);
+    Serial.print(" ");
+    Serial.print(AcY);
+    Serial.print(" ");
+    Serial.print(AcZ);
+    Serial.print(" ");
+    Serial.print(GyX);
+    Serial.print(" ");
+    Serial.print(GyY);
+    Serial.print(" ");
+    Serial.print(GyZ);
+    Serial.println("");
   }
-  
-  // if(--printDivider ==0)
-  // {
-  //   printDivider = 10;
-  //   Serial.print(AcX);
-  //   Serial.print(" ");
-  //   Serial.print(AcY);
-  //   Serial.print(" ");
-  //   Serial.print(AcZ);
-  //   Serial.print(" ");
-  //   Serial.print(GyX);
-  //   Serial.print(" ");
-  //   Serial.print(GyY);
-  //   Serial.print(" ");
-  //   Serial.print(GyZ);
-  //   Serial.println("");
-  // }
     
 //  delay(10);
 }
