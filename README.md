@@ -1,5 +1,5 @@
 # Colibrino 
-Esse é um projeto open-source de uma versão "Faça você mesmo" do nosso mouse de cabeça o Colibri! O objetivo principal dele é promover acessibilidade para pessoas com deficiências físicas do como tetraplegia, artrogripose, amputações e parilisia cerebral. 
+Esse é um projeto open-source de uma versão *Faça você mesmo* do nosso mouse de cabeça o Colibri! O objetivo principal dele é promover acessibilidade para pessoas com deficiências físicas do como tetraplegia, artrogripose, amputações e parilisia cerebral. 
 (imagem de cabeçalho)
 
 # Índice 
