@@ -55,23 +55,72 @@ void filtraIMU()
   gzrs = (float)(GyZ - (25)) / MPU6050_GYRO_GAIN * 0.01745329; //degree to radians
   // Degree to Radians Pi / 180 = 0.01745329 0.01745329251994329576923690768489
 }
+float corrigeYaw(float sinal)
+{
+  static float valorDeriv = 0, zero = 0;
+  static float sinalCorrigido=0, offset = 0;
+  static float  sinalAnterior = 0;
+  static int s=1,d=-1;
+  
+  valorDeriv = (sinal - zero);
+  zero = sinal;
+  
+  if(valorDeriv <= -180)
+  {
+      offset += +360.0f;
+  }
+  else if(valorDeriv >= 180)
+  {
+      offset += -360.0f;
+  }
+  sinalCorrigido = sinal;
+  sinalCorrigido += offset;
+  
+  return sinalCorrigido;
+}
 uint8_t mouseHoriz(void)
 {
   static float horzZero =0.0f;
   static float horzValue = 0.0f;  // Stores current analog output of each axis
-  
-  horzValue = (yaw_mahony - horzZero)*SENSITIVITY;
-  horzZero = yaw_mahony;
+  static float yaw_corrigido = 0.0f;
+  yaw_corrigido = corrigePitch(yaw_mahony);
+
+  horzValue = (yaw_corrigido - horzZero)*SENSITIVITY;
+  horzZero = yaw_corrigido;
   
   return horzValue;
+}
+float corrigePitch(float sinal)
+{
+  static float valorDeriv = 0, zero = 0;
+  static float sinalCorrigido=0, offset = 0;
+  static float  sinalAnterior = 0;
+  static int s=1,d=-1;
+  
+  valorDeriv = (sinal - zero);
+  zero = sinal;
+
+  if(valorDeriv <= -180)
+  {
+      offset += +360.0f;
+  }
+  else if(valorDeriv >= 180)
+  {
+      offset += -360.0f;
+  }
+  sinalCorrigido = sinal;
+  sinalCorrigido += offset;
+  
+  return sinalCorrigido;
 }
 uint8_t mouseVert(void)
 {
   static float vertZero =0.0f;
   static float vertValue = 0.0f;  // Stores current analog output of each axis
- 
-  vertValue = (pitch_mahony - vertZero)*SENSITIVITY;
-  vertZero = pitch_mahony;
+  static float pitch_corrigido = 0.0f;
+  pitch_corrigido = corrigePitch(pitch_mahony);
+  vertValue = (pitch_corrigido - vertZero)*SENSITIVITY;
+  vertZero = pitch_corrigido;
 
   return vertValue;
 }
