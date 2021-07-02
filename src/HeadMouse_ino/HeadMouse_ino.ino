@@ -9,7 +9,7 @@
 //---------------------------------------------------------------------------------------------------
 //Definitions
 //Mouse
-#define SENSITIVITY  35;
+#define SENSIBILIDADE  30;
 //
 #define MPU6050_ACC_GAIN 16384.0
 #define MPU6050_GYRO_GAIN 131.072 
@@ -83,11 +83,15 @@ uint8_t mouseHoriz(void)
   static float horzZero =0.0f;
   static float horzValue = 0.0f;  // Stores current analog output of each axis
   static float yaw_corrigido = 0.0f;
+  static int amostragem = 5;
   yaw_corrigido = corrigePitch(yaw_mahony);
-
-  horzValue = (yaw_corrigido - horzZero)*SENSITIVITY;
-  horzZero = yaw_corrigido;
   
+  if(--amostragem == 0)
+  {
+    amostragem = 5;
+    horzValue = (yaw_corrigido - horzZero)*SENSIBILIDADE;
+    horzZero = yaw_corrigido;
+  }
   return horzValue;
 }
 float corrigePitch(float sinal)
@@ -118,10 +122,14 @@ uint8_t mouseVert(void)
   static float vertZero =0.0f;
   static float vertValue = 0.0f;  // Stores current analog output of each axis
   static float pitch_corrigido = 0.0f;
+  static int amostragem = 5;
   pitch_corrigido = corrigePitch(pitch_mahony);
-  vertValue = (pitch_corrigido - vertZero)*SENSITIVITY;
-  vertZero = pitch_corrigido;
-
+  if(--amostragem == 0)
+  {
+    amostragem = 5;
+    vertValue = (pitch_corrigido - vertZero)*SENSIBILIDADE;
+    vertZero = pitch_corrigido;
+  }
   return vertValue;
 }
 void setup() 
@@ -144,8 +152,8 @@ void loop()
   filtraIMU();
   MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
   getRollPitchYaw_mahony();
-  xchg = mouseHoriz()*2;
-  ychg = mouseVert()*2;
+  xchg = mouseHoriz();
+  ychg = mouseVert();
 
   Mouse.move(xchg, ychg, 0);                                      // move mouse on x axis
   
