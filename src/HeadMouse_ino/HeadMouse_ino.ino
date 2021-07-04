@@ -35,6 +35,7 @@ extern float yaw_mahony,pitch_mahony,roll_mahony;
 #define LED_PIN 8 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
+boolean g_novaPiscada = false;
 
 void filtraIMU()
 {
@@ -161,6 +162,7 @@ void loop()
 
   Mouse.move(xchg, ychg, 0);                                      // move mouse on x axis
   
+  //if (g_novaPiscada) Mouse.click();
   
 }
 
@@ -261,7 +263,7 @@ int  g_toleranciaPicoP;
 int  g_toleranciaPicoN;
 int  g_toleranciaDuracao;
 boolean g_calibrado = false;
-boolean g_novaPiscada = false;
+//boolean g_novaPiscada = false;
 
 // CABEÇALHOS DAS FUNÇÕES
 void MaquinaBordas (void);
@@ -622,6 +624,7 @@ void MaquinaAcao(void)
           Serial.print(g_maiorPiscada.picoN);
           Serial.print ("; ");
           Serial.println(g_maiorPiscada.duracao);
+          Mouse.click();
 
         }
 
