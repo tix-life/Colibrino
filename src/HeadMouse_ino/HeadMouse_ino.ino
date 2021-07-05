@@ -35,7 +35,8 @@ extern float yaw_mahony,pitch_mahony,roll_mahony;
 #define LED_PIN 8 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
-boolean g_novaPiscada = false;
+#define ON true
+#define OFF false
 
 void filtraIMU()
 {
@@ -258,11 +259,28 @@ infoPiscada;
 // VARIÁVEIS GLOBAIS
 infoPiscada g_bufferPiscadas [MAX_PISCADAS_PARA_CALIBRAR];
 infoPiscada g_piscadaMediaPadrao, g_maiorPiscada, g_menorPiscada, g_piscadaAtual;
+
+volatile int16_t sensorValueOn = 0;
+volatile int16_t sensorValueOff = 0;
+
 int g_quantPiscadasNoBuffer = 0;
 int  g_toleranciaPicoP;
 int  g_toleranciaPicoN;
 int  g_toleranciaDuracao;
-boolean g_calibrado = false;
+
+int g_deltaMedioPiscada = 0;
+float g_valorBaseLine = 0.0;
+bool g_calibrado = true;
+bool g_novaPiscada = false;
+bool g_releAtuando = false;
+bool g_releLigado = false;
+bool g_resetMaquinaBordas = false;
+bool g_movimentoAcontecendo = false;
+bool g_avisandoCalibracao = false;
+bool g_piscadaBloqueada = false;
+
+float g_mediaJanelaAtual = 0;
+
 //boolean g_novaPiscada = false;
 
 // CABEÇALHOS DAS FUNÇÕES
@@ -291,36 +309,58 @@ void eyeBlinkSetup() {
 
 void callback()
 {
-  switch (fase)
-  {
-    case 1:
-      {
-        digitalWrite(pino_sample, HIGH);
-        //sensorValue = analogRead(sensorPin);
-        //digitalWrite(pino_sample, LOW);
-        //Serial.println(sensorValue);
 
-        horaDoPrint = true;
+  	static uint8_t fase = 1;
+	
+	switch (fase)
+	{
+		case 1:
+		{
+			// Liga o IR
+			digitalWrite(pino_sample, HIGH);
 
-        // um milissegundo a mais
-        tickMs++;
-      }
-      break;
+			horaDoPrint = true;
 
-    case 2:
-      {
-        // o LED já ligou e a saída do transistor já estabilizou. Hora de medir a saída e desligar o Led.
-        sensorValue = analogRead(sensorPin);
-        digitalWrite(pino_sample, LOW);
-      }
-      break;
+			// Um milissegundo a mais
+			tickMs++;
+		}
+		break;
 
-    default:
-      {
-        // Faz nada. Só gasta o tempo da fase.
-      }
-      break;
-  }
+		case 2:
+		{
+			// O LED j� ligou e a sa�da do transistor j� estabilizou. Hora de medir a sa�da e desligar o Led.
+      sensorValueOn = analogRead(sensorPin);
+      digitalWrite(pino_sample, LOW);
+			//AcionadorPiscada_acionamentoLEDIR(false);
+			
+		}
+		break;
+
+		case 3:
+		{
+			// o LED j� desligou e a sa�da do transistor j� estabilizou. Hora de medir novamente a sa�da.
+			sensorValueOff = analogRead(sensorPin);
+		}
+		break;
+
+		case 4:
+		{
+			// faz nada
+		}
+		break;
+
+		case 5:
+		{
+
+		}
+		break;
+
+		default:
+		{
+			// Faz nada. S� gasta o tempo da fase.
+		}
+		break;
+	}
 
   if (fase < NUMERO_DE_FASES)
   {
@@ -335,20 +375,35 @@ void callback()
 
 void eyeBlinkRefresh() {
 
-  MaquinaBordas ();
-  MaquinaPiscadas();
-  MaquinaAcao();
+  //MaquinaBordas ();
+  //MaquinaPiscadas();
+  //MaquinaAcao();
+  AcionadorPiscada_refresh();
 
 }
 
+////////////////////////////////////////////////////////////////////
+//
+//	MaquinaBordas
+//	
+//	Descri��o: 
+// 
+//  Parametro de entrada: - nenhum.
+// 
+//	Retorno: -nenhum.
+//
+////////////////////////////////////////////////////////////////////
 enum
 {
   ESTADO_INICIALIZACAO = 0,
+  ESTADO_DETECTANDO_REPOUSO_ANTES_DE_BORDA,
   ESTADO_DETECTANDO_BORDA,
+  ESTADO_DETECTANDO_FIM_PISCADA,
   ESTADO_DETECTANDO_PICOS,
   ESTADO_AGUARDANDO_PICO_POSITIVO,
   ESTADO_AGUARDANDO_PICO_NEGATIVO,
   EVENTO_DETECTADO,
+  ESTADO_AGUARDANDO_REPOUSO,
 
 
   ESTADO_AGUARDANDO_INICIO_PISCADA,
@@ -358,152 +413,286 @@ enum
 
 void MaquinaBordas (void)
 {
-
   static int mediaAntesDaBorda;
   static int limiarSuperior;
   static int limiarInferior;
 
   static int valorPicoDerivadaP;
   static int valorPicoDerivadaN;
+  static int valorInicioMovimento;
+  static int valorFimMovimento;
   static int tempoPicoP;
   static int tempoPicoN;
   static int etapaDetectEvento;
   static int numCiclosAguardandoPico;
-  static boolean led;
+  static float mediaDurantePiscada;
+  static bool s_led;
+  static unsigned long tempoInicioBorda;
+  static unsigned long tempoInicioMovimento;
+  static unsigned long tempoFimMovimento;
+  static unsigned long tempoInicioRepouso;
+  static unsigned long tempoInicioPiscada;
+  static unsigned long tempoParaResetBaselineRepouso;
+  static float limiarDeltaBaseline;
 
   int tempoEntrePicos;
 
-  // Vamos entrar aqui uma vez a cada leitura do sensor (1 ms)
-  if (horaDoPrint)
-  {
-    horaDoPrint = false;
 
 
-    // Armazena a leitura mais recente
-    vetorLeituras[indexLeituras] = sensorValue;
+#define DERIVADA_LIMIAR_BORDA_SUBIDA  3.4//2.5
+#define DERIVADA_LIMIAR_BORDA_DESCIDA  -3.4//-2.5
+#define DERIVADA_LIMIAR_BORDA_SUBIDA_2  1.0 //0.4
+#define DERIVADA_LIMIAR_BORDA_DESCIDA_2  -1.0 //0.4
+#define DERIVADA_LIMIAR_SUPERIOR_BASELINE 0.25
+#define DERIVADA_LIMIAR_INFERIOR_BASELINE -0.25
 
-    // Calcula a média das últimas 50 leituras e atualiza o buffer circular de médias
-    mediaJanelaAtual = CalculaMedia();
-
-    // Calcula a derivada das últimas 50 médias armazenadas
-    derivada = CalculaDerivada();
-
-    // Atualiza o índice do buffer circular de leituras do sensor
-    indexLeituras++;
-    if (indexLeituras == NUM_LEITURAS_JANELA)
-    {
-      indexLeituras = 0;
-    }
-
-    // Imprime em formato CSV
-    //Serial.print(sensorValue);
-    //Serial.print(";");
-    //Serial.print(mediaJanelaAtual);
-    //Serial.print(";");
-    //Serial.println(derivada);
-
-#define DERIVADA_LIMIAR_BORDA_SUBIDA  3
-#define DERIVADA_LIMIAR_BORDA_DESCIDA  -3
 #define NUM_CICLOS_LIBERAR_PISCADA 150
 #define DELTA_MINIMO_PARA_CONFIRMAR_PISCADA 10
-#define MAX_CICLOS_AGUARDANDO_PICO  500 // máximo 125 ms aguardando pico
+#define MAX_CICLOS_AGUARDANDO_PICO  1
+#define TEMPO_MINIMO_REPOUSO_ENTRE_BORDAS_MS  50
 
-    // máquina de estados para interpretação de piscadas
-    switch (estado)
-    {
-      case ESTADO_INICIALIZACAO:
+  // m�quina de estados para interpreta��o de piscadas
+  switch (estado)
+  {
+    case ESTADO_INICIALIZACAO:
+      {
+        s_led = false;
+        //LEDs_Acionamento(ACIONADOR_LED_RELE_STATUS,false);
+        numCiclosAguardandoPico = 0;
+        etapaDetectEvento = 0;
+
+        // Deixa correr uma quantidade m�nima de ciclos iniciais para que as m�dias estabilizem
+        if (ciclosIniciais <= NUM_CICLOS_INICIAIS)
         {
-          led = false;
-          digitalWrite(ledPin, LOW);
-          numCiclosAguardandoPico = 0;
-          etapaDetectEvento = 0;
+          ciclosIniciais++;
+          //printf("%f\r\n",g_mediaJanelaAtual);
+        }
+        else
+        {
+          // Inicializa��o conclu�da!
+          tempoInicioRepouso = tickMs;
+          estado = ESTADO_DETECTANDO_REPOUSO_ANTES_DE_BORDA;
+        }
+      }
+      break;
 
-          // Deixa correr uma quantidade mínima de ciclos iniciais para que as médias estabilizem
-          if (ciclosIniciais <= NUM_CICLOS_INICIAIS)
+    case ESTADO_DETECTANDO_REPOUSO_ANTES_DE_BORDA:
+      {
+        // Este estado exige um tempo de repouso no qual n�o deve haver movimento brusco, de forma a criar
+        // um intervalo for�ado entre as piscadas, evitando tamb�m que uma piscada forte e lenta seja confundida com
+        // um trem de v�rias piscadas r�pidas
+#define TEMPO_MINIMO_REPOUSO_ANTES_DE_BORDA_MS 20 //50
+
+        // cessar movimento
+        g_movimentoAcontecendo = false;
+
+        if ((tickMs - tempoInicioRepouso) > TEMPO_MINIMO_REPOUSO_ANTES_DE_BORDA_MS)
+        {
+#define MAX_DELTA_BASELINE  25
+
+					// TODO: Ajuste do delta base line pelo potenciometro.
+          //limiarDeltaBaseline =  (float) analogRead(pinoAjusteDeltaBaseline) / 1023 * MAX_DELTA_BASELINE;
+
+#ifdef SEM_POT_AJUSTE_SENSIBILIDADE
+          limiarDeltaBaseline = DELTA_BASELINE_PADRAO;
+#endif
+
+          //printf("#\r\n");
+
+          // Libera novas piscadas.
+          g_piscadaBloqueada = false;
+          estado = ESTADO_DETECTANDO_BORDA;
+
+          g_valorBaseLine = g_mediaJanelaAtual;
+
+          tempoParaResetBaselineRepouso = tickMs;
+
+          // Bipezinho super curto.
+			// REMOVENDO BIPES LEGADOS AcionadorPiscada_acionamentoBuzzer (ON);	// Barulho alto.
+					//AcionadorPiscada_acionamentoBuzzer(INPUT,HIGH);		// Barulho baixo.
+        }
+      }
+      break;
+
+    case ESTADO_DETECTANDO_BORDA:
+      {
+        if (g_movimentoAcontecendo == false)
+        {
+          // Desliga bipezinho super curto.
+		  // REMOVENDO BIPES LEGADOS AcionadorPiscada_acionamentoBuzzer (OFF);
+        }
+
+#define DELTA_BASELINE_UP 10
+#define DELTA_BASELINE_DOWN 7
+
+        if ((derivada < DERIVADA_LIMIAR_BORDA_DESCIDA) || (derivada > DERIVADA_LIMIAR_BORDA_SUBIDA))
+        {
+
+          //if (g_mediaJanelaAtual > (g_valorBaseLine + DELTA_BASELINE_UP))
+          if (g_mediaJanelaAtual > (g_valorBaseLine + limiarDeltaBaseline))
           {
-            ciclosIniciais++;
-            Serial.println(mediaJanelaAtual);
+            AcionadorPiscada_acionamentoRele(true);
+			AcionadorPiscada_acionamentoBuzzer (ON);
+			  
+            g_movimentoAcontecendo = true;
+
+			 	
+            //printf("ON!\r\n");
+
+						//printf("BASELINE REPOUSO: ");
+						//printf("%.1f\r\n",g_valorBaseLine);
+
+						//printf(" LIMIAR DELTA BASELINE: ");
+						//printf("%.1f\r\n",limiarDeltaBaseline);            
+
+            tempoInicioPiscada = tickMs;
+
+            estado = ESTADO_DETECTANDO_FIM_PISCADA;
           }
           else
           {
-            // inicialização concluída!
-            estado = ESTADO_DETECTANDO_BORDA;
+            //printf("*** MOVIMENTO INSUFICIENTE ***\r\n");
+
+          }
+
+          // Reinicia a contagem do prazo para reset do Baseline.
+          tempoParaResetBaselineRepouso = tickMs;
+        }
+        else
+        {
+          // Se ficarmos um tempo em repouso, redefine o baseline.
+
+#define TIMEOUT_REDEFINICAO_DE_BASELINE_REPOUSO_MS  100
+
+          // se tivermos repouso por uma certa quantidade de tempo, redefine o baseline
+          if ( (tickMs - tempoParaResetBaselineRepouso) > TIMEOUT_REDEFINICAO_DE_BASELINE_REPOUSO_MS)
+          {
+            tempoInicioRepouso = tickMs;
+            estado = ESTADO_DETECTANDO_REPOUSO_ANTES_DE_BORDA;
           }
         }
-        break;
+      }
+      break;
 
-      case ESTADO_DETECTANDO_BORDA:
+    case ESTADO_DETECTANDO_FIM_PISCADA:
+      {
+        //printf("%f\r\n",derivada);
+        //printf("%f\r\n",g_mediaJanelaAtual);
+
+        //if (g_mediaJanelaAtual < (g_valorBaseLine + DELTA_BASELINE_DOWN))
+        if (g_mediaJanelaAtual < (g_valorBaseLine + 0.7 * limiarDeltaBaseline)) // a histerese para fim da piscada � de baseline + 70% do limiar do delta para in�cio da piscada
+        {
+			AcionadorPiscada_acionamentoRele(false);
+			AcionadorPiscada_acionamentoBuzzer (OFF);
+
+          g_movimentoAcontecendo = false;
+
+          //printf("OFF!\r\n");
+
+          tempoInicioRepouso = tickMs;
+
+          estado = ESTADO_DETECTANDO_REPOUSO_ANTES_DE_BORDA;
+        }
+
+#define TIMEOUT_ESTABILIZACAO_PISCADA_MS  1000
+
+        // Segunda condi��o de sa�da: se a piscada n�o estiver est�vel ap�s um tempo, for�a a sa�da
+        if ( (tickMs - tempoInicioPiscada) > TIMEOUT_ESTABILIZACAO_PISCADA_MS)
         {
           if ((derivada < DERIVADA_LIMIAR_BORDA_DESCIDA) || (derivada > DERIVADA_LIMIAR_BORDA_SUBIDA))
           {
-            estado = ESTADO_DETECTANDO_PICOS;
-            numCiclosAguardandoPico = 0;
-            valorPicoDerivadaN = 0;
-            valorPicoDerivadaP = 0;
+				AcionadorPiscada_acionamentoRele(false);
+				AcionadorPiscada_acionamentoBuzzer (OFF);
 
-            digitalWrite(pino_buzzer, HIGH);
+            g_movimentoAcontecendo = false;
+
+			// REMOVENDO BIPES LEGADOS AcionadorPiscada_acionamentoBuzzer(OFF);
+
+            //printf("OFF NA MARRETA!\r\n");
+
+            tempoInicioRepouso = tickMs;
+
+            estado = ESTADO_DETECTANDO_REPOUSO_ANTES_DE_BORDA;
           }
         }
-        break;
+      }
+      break;
 
-      case ESTADO_DETECTANDO_PICOS:
+    case ESTADO_DETECTANDO_PICOS:
+      {
+        // REMOVENDO BIPES LEGADOS AcionadorPiscada_acionamentoBuzzer(OFF);
+				
+        //digitalWrite(ledPin, LOW);
+
+        if (numCiclosAguardandoPico < MAX_CICLOS_AGUARDANDO_PICO)
         {
-          // Vamos analisar as derivadas durante uma janela de tempo
-          if (numCiclosAguardandoPico < MAX_CICLOS_AGUARDANDO_PICO)
-          {
-            numCiclosAguardandoPico++;
-
-            // Vamos armazenar os valores de pico positivo e negativo durante a janela
-            if (derivada >= 0)
-            {
-              // Armazena o valor do pico e o momento em que ele ocorreu dentro da janela
-              if (derivada > valorPicoDerivadaP)
-              {
-                valorPicoDerivadaP = derivada;
-                tempoPicoP = numCiclosAguardandoPico;
-              }
-            }
-            else
-            {
-              // Armazena o valor do pico e o momento em que ele ocorreu dentro da janela
-              if (derivada < valorPicoDerivadaN)
-              {
-                valorPicoDerivadaN = derivada;
-                tempoPicoN = numCiclosAguardandoPico;
-              }
-            }
-
-            //Serial.println(derivada);
-          }
-          else
-          {
-            // Calcula a duração entre os picos
-            tempoEntrePicos = tempoPicoP - tempoPicoN;
-            if (tempoEntrePicos < 0)
-            {
-              tempoEntrePicos = tempoPicoN - tempoPicoP;
-            }
-
-            estado = ESTADO_DETECTANDO_BORDA;
-            digitalWrite(pino_buzzer, LOW);
-
-            SalvarPiscada (valorPicoDerivadaP, valorPicoDerivadaN, tempoEntrePicos);
-
-            /*
-              //Print
-              Serial.print(valorPicoDerivadaP);
-              Serial.print(";");
-              Serial.print(valorPicoDerivadaN);
-              Serial.print(";");
-              Serial.println(tempoEntrePicos);
-            */
-
-          }
+          // s� aguarda
+          numCiclosAguardandoPico++;
         }
-        break;
-    }
+        else
+        {
+          //printf("%d\r\n"mediaAntesDaBorda);
+
+          // Usa essas vari�veis para salvar o maior e o menor valor do movimento:
+          if (mediaAntesDaBorda > valorPicoDerivadaP)
+          {
+            valorPicoDerivadaP = mediaAntesDaBorda;
+          }
+          if (mediaAntesDaBorda < valorPicoDerivadaN)
+          {
+            valorPicoDerivadaN = mediaAntesDaBorda;
+          }
+
+          // Marca o tempo em que O MOVIMENTO pode estar acabando
+          tempoFimMovimento = tickMs;
+
+          // Salva o que pode ser o �ltimo valor registrado durante o movimento
+          valorFimMovimento = mediaAntesDaBorda;
+
+          // Vai ver se o movimento vai acabar por aqui
+          estado = ESTADO_AGUARDANDO_REPOUSO;
+        }
+      }
+      break;
+
+    case ESTADO_AGUARDANDO_REPOUSO:
+      {
+
+        // J� temos um bom tempo sem bordas detectadas?
+        //if ((tickMs - tempoInicioBorda) > TEMPO_MINIMO_REPOUSO_ENTRE_BORDAS_MS)
+
+#define TEMPO_MAXIMO_PISCADA_PILOTO_MS   1000
+
+        if ((tickMs - tempoInicioBorda) > TEMPO_MAXIMO_PISCADA_PILOTO_MS)
+        {
+          // Fim do movimento: calcula o tempo que levou.
+          tempoEntrePicos = tempoFimMovimento - tempoInicioMovimento;
+
+          // Volta para o estado inicial de detec��o de repouso antes da pr�xima borda.
+          g_piscadaBloqueada = true;
+          tempoInicioRepouso = tickMs;
+          estado = ESTADO_DETECTANDO_REPOUSO_ANTES_DE_BORDA;
+        }
+        else
+        {
+          //printf("%f\r\n",g_mediaJanelaAtual);
+
+          // Usa essas vari�veis para salvar o maior e o menor valor do movimento:
+          if (g_mediaJanelaAtual > valorPicoDerivadaP)
+          {
+            valorPicoDerivadaP = g_mediaJanelaAtual;
+          }
+          if (g_mediaJanelaAtual < valorPicoDerivadaN)
+          {
+            valorPicoDerivadaN = g_mediaJanelaAtual;
+          }
+
+        }
+      }
+      break;
   }
 }
+
 
 
 enum
@@ -593,87 +782,7 @@ enum
   ESTADO_MAQUINA_ACAO_DESLIGAR_RELE,
 };
 
-void MaquinaAcao(void)
-{
-  static int tempoRele;
 
-  switch (estadoMaquinaAcao)
-  {
-    case ESTADO_MAQUINA_ACAO_INICIAL:
-      {
-        if (g_novaPiscada)
-        {
-               
-          Serial.print ("PISCADA ATUAL: ");
-          Serial.print(g_piscadaAtual.picoP);
-          Serial.print(";");
-          Serial.print(g_piscadaAtual.picoN);
-          Serial.print(";");
-          Serial.println(g_piscadaAtual.duracao);
-
-          Serial.print ("menor piscada: ");
-          Serial.print(g_menorPiscada.picoP);
-          Serial.print ("; ");
-          Serial.print(g_menorPiscada.picoN);
-          Serial.print ("; ");
-          Serial.println(g_menorPiscada.duracao);
-
-          Serial.print ("maior piscada: ");
-          Serial.print(g_maiorPiscada.picoP);
-          Serial.print ("; ");
-          Serial.print(g_maiorPiscada.picoN);
-          Serial.print ("; ");
-          Serial.println(g_maiorPiscada.duracao);
-          Mouse.click();
-
-        }
-
-
-        if ((g_calibrado) && (g_novaPiscada))
-        {
-                
-          // compara a piscada atual com os parâmetros salvos:
-
-          // Se o pico positivo da piscada atual está dentro da tolerância...
-          if ((g_piscadaAtual.picoP >= g_menorPiscada.picoP) && (g_piscadaAtual.picoP <= g_maiorPiscada.picoP))
-          {
-            // ...e se o pico negativo da piscada atual está dentro da tolerância...
-            if ((g_piscadaAtual.picoN <= g_menorPiscada.picoN) && (g_piscadaAtual.picoN >= g_maiorPiscada.picoN))
-            {
-              // ...e se a duração da piscada atual está dentro da tolerância...
-              if ((g_piscadaAtual.duracao >= g_menorPiscada.duracao) && (g_piscadaAtual.duracao <= g_maiorPiscada.duracao))
-              {
-                // PISCADA ACEITA!
-                tempoRele = tickMs;
-         
-                Serial.println("==== PISCADA ACEITA ====");
-
-                estadoMaquinaAcao = ESTADO_MAQUINA_ACAO_DESLIGAR_RELE;
-              }
-            }
-          }
-        }
-
-        g_novaPiscada = false;
-      }
-      break;
-
-    case ESTADO_MAQUINA_ACAO_DESLIGAR_RELE:
-      {
-        /*
-        #define TEMPO_MINIMO_RELE_MS  100
-     
-        if ((tickMs - tempoRele) >= TEMPO_MINIMO_RELE_MS)
-        {        
-          estadoMaquinaAcao = ESTADO_MAQUINA_ACAO_INICIAL;
-        }
-        */
-
-        estadoMaquinaAcao = ESTADO_MAQUINA_ACAO_INICIAL;
-      }
-      break;
-  }
-}
 
 // Calcula a média das últimas 50 leituras e salva no buffer circular de médias calculadas
 unsigned long CalculaMedia ()
@@ -740,6 +849,20 @@ void SalvarPiscada (int valorPicoDerivadaP, int valorPicoDerivadaN, int tempoEnt
   g_novaPiscada = true;
 }
 
+void AcionadorPiscada_acionamentoRele(bool on_off)
+{
+  if (on_off) {
+    Mouse.press();
+  } else {
+    Mouse.release();
+  }
+  digitalWrite(ledPin, on_off);
+}
+
+void AcionadorPiscada_acionamentoBuzzer(bool on_off)
+{
+
+}
 void CalibrarPiscada (void)
 {
   int i;
@@ -869,3 +992,41 @@ void CalibrarPiscada (void)
   g_calibrado = true;
 
 }
+
+
+void AcionadorPiscada_refresh()
+{
+	
+  if(horaDoPrint)
+  {
+    // Faz a correção da leitura do sensor para desconsiderar a luz ambiente
+    sensorValue = sensorValueOff - sensorValueOn;
+
+    // M�quinas de estado que interessam:
+    MaquinaMedias ();
+    MaquinaBordas ();
+
+    g_novaPiscada = false;
+    horaDoPrint = false;
+  }
+}
+
+void MaquinaMedias (void)
+{
+  // Armazena a leitura mais recente
+  vetorLeituras[indexLeituras] = sensorValue;
+
+  // Calcula a m�dia das �ltimas 50 leituras e atualiza o buffer circular de m�dias
+  g_mediaJanelaAtual = CalculaMedia();
+
+  // Calcula a derivada das �ltimas 50 m�dias armazenadas
+  derivada = CalculaDerivada();
+
+  // Atualiza o �ndice do buffer circular de leituras do sensor
+  indexLeituras++;
+  if (indexLeituras == NUM_LEITURAS_JANELA)
+  {
+    indexLeituras = 0;
+  }
+}
+
