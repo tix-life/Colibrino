@@ -138,6 +138,7 @@ void setup()
 {
   Wire.begin();
   Wire.setClock(100000); // 400kHz I2C clock. Comment this line if having compilation difficulties
+  delay(100);
   MPU6050_Init();
   // pinMode(ACIONADOR,INPUT);
   eyeBlinkSetup();
@@ -156,7 +157,8 @@ void loop()
 
   mpu6050_GetData();
   filtraIMU();
-  MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
+  //MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
+  MahonyAHRSupdateIMU( gyrs,  gzrs,  gxrs , ayg,  azg,  axg);
   getRollPitchYaw_mahony();
   xchg = mouseHoriz();
   ychg = mouseVert();
@@ -203,8 +205,8 @@ boolean piscada = false;
 unsigned long tendenciaDescida = 0;
 unsigned long tendenciaSubida = 0;
 
-#define MIN_QUANT_LEITURAS_ASCENDENTES  20
-#define MIN_QUANT_LEITURAS_DESCENDENTES  10
+#define MIN_QUANT_LEITURAS_ASCENDENTES  40
+#define MIN_QUANT_LEITURAS_DESCENDENTES  5
 
 #define PERIODO_ENTRE_LEITURAS_MS  3
 #define NUM_LEITURAS_JANELA 50
@@ -294,8 +296,11 @@ void CalibrarPiscada (void);
 
 
 void eyeBlinkSetup() {
+
+  delay(100);
+
   Serial.begin(115200);      // Debug constructor
-  pinMode(13, OUTPUT);     // Visualizatio constructor
+  pinMode(ledPin, OUTPUT);     // Visualizatio constructor
   //pinMode(pino_buzzer, OUTPUT); // <--- DESCOMENTE PRO BARULHO AUMENTAR!
   pinMode(pino_sample, OUTPUT);
   pinMode(relePin, OUTPUT);
@@ -853,146 +858,17 @@ void AcionadorPiscada_acionamentoRele(bool on_off)
 {
   if (on_off) {
     Mouse.press();
+    digitalWrite(ledPin, HIGH);
   } else {
     Mouse.release();
+    digitalWrite(ledPin, LOW);
   }
-  digitalWrite(ledPin, on_off);
 }
 
 void AcionadorPiscada_acionamentoBuzzer(bool on_off)
 {
 
 }
-void CalibrarPiscada (void)
-{
-  int i;
-  infoPiscada piscadaMedia;
-
-  // Inicializa as variáveis
-  int menorPicoP = 1000;
-  int maiorPicoP = 0;
-  int somaPicoP = 0;
-
-  int menorPicoN = -1000;
-  int maiorPicoN = 0;
-  int somaPicoN = 0;
-
-  int menorDuracao = 1000;
-  int maiorDuracao = 0;
-  int somaDuracao = 0;
-
-
-  // Calcula o maior e o menor Pico Positivo dentre as piscadas salvas
-  for (i = 0; i < MAX_PISCADAS_PARA_CALIBRAR; i++)
-  {
-    if (g_bufferPiscadas[i].picoP > maiorPicoP)
-    {
-      maiorPicoP = g_bufferPiscadas[i].picoP;
-    }
-
-    if (g_bufferPiscadas[i].picoP < menorPicoP)
-    {
-      menorPicoP = g_bufferPiscadas[i].picoP;
-    }
-
-    // vai somando para calcular a média
-    somaPicoP += g_bufferPiscadas[i].picoP;
-  }
-  /*
-    Serial.println ("picoP:");
-    Serial.println(maiorPicoP);
-    Serial.println(menorPicoP);
-  */
-
-
-  // Calcula o maior e o menor Pico Negativo dentre as piscadas salvas
-  // (Fazendo as contas com números positivos pra facilitar)
-  for (i = 0; i < MAX_PISCADAS_PARA_CALIBRAR; i++)
-  {
-    if (g_bufferPiscadas[i].picoN < maiorPicoN)
-    {
-      maiorPicoN = g_bufferPiscadas[i].picoN;
-    }
-
-    if (g_bufferPiscadas[i].picoN > menorPicoN)
-    {
-      menorPicoN = g_bufferPiscadas[i].picoN;
-    }
-
-    // vai somando para calcular a média
-    somaPicoN += g_bufferPiscadas[i].picoN;
-  }
-  /*
-    Serial.println ("picoN:");
-    Serial.println(maiorPicoN);
-    Serial.println(menorPicoN);
-  */
-
-
-  // Calcula a maior e a menor duração entre as piscadas salvas
-  for (i = 0; i < MAX_PISCADAS_PARA_CALIBRAR; i++)
-  {
-    if (g_bufferPiscadas[i].duracao > maiorDuracao)
-    {
-      maiorDuracao = g_bufferPiscadas[i].duracao;
-    }
-
-    if (g_bufferPiscadas[i].duracao < menorDuracao)
-    {
-      menorDuracao = g_bufferPiscadas[i].duracao;
-    }
-
-    // vai somando para calcular a média
-    somaDuracao += g_bufferPiscadas[i].duracao;
-  }
-  /*
-    Serial.println ("duracao");
-    Serial.println(maiorDuracao);
-    Serial.println(menorDuracao);
-  */
-
-  // Calcula as médias
-  piscadaMedia.picoP = somaPicoP / MAX_PISCADAS_PARA_CALIBRAR;
-  piscadaMedia.picoN = somaPicoN / MAX_PISCADAS_PARA_CALIBRAR;
-  piscadaMedia.duracao = somaDuracao / MAX_PISCADAS_PARA_CALIBRAR;
-
-  // Salva a piscada média que será considerada a partir de agora
-  g_piscadaMediaPadrao = piscadaMedia;
-
-  // Calcula as tolerâncias
-  g_toleranciaPicoP = (maiorPicoP - menorPicoP) / 2;
-  g_toleranciaPicoN = (maiorPicoN - menorPicoN) / 2;
-  g_toleranciaDuracao = (maiorDuracao - menorDuracao) / 2;
-
-  // Calcula a menor piscada tolerável
-  g_menorPiscada.picoP = menorPicoP - g_toleranciaPicoP;
-  g_menorPiscada.picoN = menorPicoN - g_toleranciaPicoN;
-  g_menorPiscada.duracao = menorDuracao - g_toleranciaDuracao;
-
-  // Calcula a maior piscada tolerável
-  g_maiorPiscada.picoP = maiorPicoP + g_toleranciaPicoP;
-  g_maiorPiscada.picoN = maiorPicoN + g_toleranciaPicoN;
-  g_maiorPiscada.duracao = maiorDuracao + g_toleranciaDuracao;
-
-  Serial.print ("menor piscada: ");
-  Serial.print(g_menorPiscada.picoP);
-  Serial.print ("; ");
-  Serial.print(g_menorPiscada.picoN);
-  Serial.print ("; ");
-  Serial.println(g_menorPiscada.duracao);
-
-  Serial.print ("maior piscada: ");
-  Serial.print(g_maiorPiscada.picoP);
-  Serial.print ("; ");
-  Serial.print(g_maiorPiscada.picoN);
-  Serial.print ("; ");
-  Serial.println(g_maiorPiscada.duracao);
-
-  // informa que agora temos um valor calibrado
-  g_calibrado = true;
-
-}
-
 
 void AcionadorPiscada_refresh()
 {
@@ -1001,6 +877,7 @@ void AcionadorPiscada_refresh()
   {
     // Faz a correção da leitura do sensor para desconsiderar a luz ambiente
     sensorValue = sensorValueOff - sensorValueOn;
+    Serial.println(sensorValue);
 
     // M�quinas de estado que interessam:
     MaquinaMedias ();
