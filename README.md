@@ -35,15 +35,15 @@ a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 O Colibrino possui duas versões:
 ## Versão com fio
 
-|Nome|Especificação|Sugestão de compra|
+|Nome|Especificação||
 |---|---|---|
-|Arduino Leonardo ou Micro Pro|Processador AT32U4|[Bau da Eletônica](https://www.baudaeletronica.com.br/placa-micro-r3.html)|
-|MPU6050|Acelerômetro e Giroscópio||
-|TCRT 5000|Sensor Infravermelho||
-|Cabo com 6 vias|Ligação entre o Arduino e os Sensores||
-|Placa padrão ou protoboard|Local de Montagem||
+|Arduino Leonardo ou Micro Pro|Com Microcontrolador Atmega 32U4|[Pinagem Pro Micro](https://cdn.sparkfun.com/assets/f/d/8/0/d/ProMicro16MHzv2.pdf)<br>[Pinagem Leonardo](https://content.arduino.cc/assets/Pinout-Leonardo_latest.png)|
+|MPU6050|Acelerômetro e Giroscópio|[datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)|
+|TCRT 5000|Sensor Infravermelho|[datasheet](https://www.vishay.com/docs/83760/tcrt5000.pdf)|
+|Cabo com 6 vias|Ligação entre o Arduino e os Sensores - |[Ex.: cabo para alarme](https://stecondutores.com.br/produto/cabo-de-alarme/)|
+|Placa padrão ou protoboard|Base para montagem do circuito||
 |Leds|Indicador de piscada e de funcionamento||
-|Resistor|Controlador da corrente nos componentes||
+|Resistor|1 x 4700Ω a 6800Ω - polarização do fototransistor <br> 1 x 180Ω a 330Ω - restringe corrente do LED IR<br> 1 x 10Ω - atenuar o  buzzer||
 |Buzzer|Indicador Sonoro da Piscada||
 |Cabo USB|Conexão entre computador e Arduíno||
 |Armação de Óculos|Suporte para os sensores||
@@ -71,7 +71,7 @@ A montagem descrita e representada a seguir é da versão com fio do Colibrino. 
 6. Fixe o sensor MPU6050 em alguma armação de óculos.
 7. Use e aproveite. :D
 
-(talvez montar um painel com imagens)
+(montar um painel com imagens)
 
 
 # Modo de Uso
@@ -80,7 +80,7 @@ Com o colibrino devidamente montado para usá-lo basta mexer a cabeça com o ocu
 1. O Sensor MPU6050 deve estar colocado no óculos que vai ser usado, porém o TCRT deve estar conectado somente ao fio permitindo o ajuste.
 2. Para melhor detecção da piscadela é necessário mexer o fio que o sensor TCRT está conectado para mais próximo ao olho.
 
-(explicar como que usa o colibrino)
+(explicar como que usa o colibrino - como posicionar e ajustar o sensor)
 
 # Plano de Voo 🐦
 Existe inumeras funções que podem ser adcionadas ao Colibrino e algumas que estão no plano de voo da nossa equipe são:
