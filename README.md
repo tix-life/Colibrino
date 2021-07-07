@@ -1,6 +1,7 @@
 # Colibrino 
-Esse é um projeto open-source de uma versão *Faça você mesmo* do nosso mouse de cabeça o Colibri! O objetivo principal dele é promover acessibilidade para pessoas com deficiências físicas do como tetraplegia, artrogripose, amputações e parilisia cerebral. 
-(imagem de cabeçalho)
+Esse é um projeto open-source de uma versão *Faça você mesmo* do nosso mouse de cabeça o Colibri! O objetivo principal dele é promover acessibilidade para pessoas com deficiências físicas do como tetraplegia, artrogripose, amputações e parilisia cerebral.
+
+![Diagrama esquemático|617x512,20%](./doc/header.jpeg)
 
 # Índice 
 
@@ -60,7 +61,7 @@ Obs: Será necessário todos os componentes da versão de fio juntamente com os 
 # Montagem:
 A montagem descrita e representada a seguir é da versão com fio do Colibrino. Em breve iremos apresentar a versão sem fio. 
 ## Diagrama Esquemático
-(Esquemático)
+![Diagrama esquemático|617x512,20%](./doc/protoboard-diagram.jpeg)
 ## Instruções de Montagem
 1. Conecte o Arduíno, Buzzer, Leds e Resistores no Protoboard. 
 2. Para os sensores MPU6050 e TCRT 5000 é necessário solda-los com o fio de 6 vias.
