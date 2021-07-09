@@ -35,7 +35,7 @@ a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 O Colibrino possui duas versões:
 ## Versão com fio
 
-|Nome|Especificação||
+|Nome|Especificação|Documentação|
 |---|---|---|
 |Arduino Leonardo ou Micro Pro|Com Microcontrolador Atmega 32U4|[Pinagem Pro Micro](https://cdn.sparkfun.com/assets/f/d/8/0/d/ProMicro16MHzv2.pdf)<br>[Pinagem Leonardo](https://content.arduino.cc/assets/Pinout-Leonardo_latest.png)|
 |MPU6050|Acelerômetro e Giroscópio|[datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)|
@@ -48,15 +48,22 @@ O Colibrino possui duas versões:
 |Cabo USB|Conexão entre computador e Arduíno||
 |Armação de Óculos|Suporte para os sensores||
 
-## Versão Bluetooth (Desenvolvimento)
+## Versão Bluetooth (em desenvolvimento)
 
-Obs: Será necessário todos os componentes da versão de fio juntamente com os da tabela a seguir.
-|Nome|Especificação|Sugestão de compra|
+Nome|Especificação|Documentação|
 |---|---|---|
-|ESP32|Processador Bluetooth||
-|Bateria 3.7v|Fonte de Energia||
-|Carregador de bateria|Carregador da fonte de energia||
-
+|Módulo de rádio ESP32|Microcontrolador Bluetooth compatível com Arduino||
+|Bateria recarregável 3.7v|Fonte de Energia||
+|Carregador de bateria e regulador de tensão |Gerenciamento da fonte de energia||
+|MPU6050|Acelerômetro e Giroscópio|[datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)|
+|TCRT 5000|Sensor Infravermelho|[datasheet](https://www.vishay.com/docs/83760/tcrt5000.pdf)|
+|Cabo com 6 vias|Ligação entre o Arduino e os Sensores - |[Ex.: cabo para alarme](https://stecondutores.com.br/produto/cabo-de-alarme/)|
+|Placa padrão ou protoboard|Base para montagem do circuito||
+|Leds|Indicador de piscada e de funcionamento||
+|Resistor|1 x 3500Ω a 5000Ω - polarização do fototransistor <br> 1 x 120Ω a 220Ω - restringe corrente do LED IR<br> 1 x 10Ω - atenuar o  buzzer||
+|Buzzer|Indicador Sonoro da Piscada||
+|Cabo USB|Conexão entre computador e Arduíno||
+|Armação de Óculos|Suporte para os sensores||
 
 # Montagem:
 A montagem descrita e representada a seguir é da versão com fio do Colibrino. Em breve iremos apresentar a versão sem fio. 
@@ -73,6 +80,12 @@ A montagem descrita e representada a seguir é da versão com fio do Colibrino. 
 
 (montar um painel com imagens)
 
+# Princípios de funcionamento
+## Captura do movimento da cabeça
+O Colibrino utiliza um tipo de sensor chamado de IMU (Unidade de Medidas Inerciais) para obter informação sobre a orientação espacial da cabeça. A IMU do Colibrino é o MPU-6050, um circuito integrado (acelerômetro + giroscópio) contendo estruturas mecânicas microscópicas capazes de sentir movimentos do corpo preso a ele e a força da gravidade. Essas estruturas mecânicas também interagem eletricamente com o circuito que mede os movimentos em números correspondentes à aceleração e à velocidade angular em três eixos. Os dados são filtrados e utilizados para calcular a posição da cabeça e, por fim, mover o cursor do mouse de forma correspondente.
+
+## Detecção da piscadela
+O sensor de piscadelas detecta pequenas variações na reflexão de luz que ocorrem quando uma piscada bem forte é realizada em frente ao sensor. Primeiro a luz infravermelha é emitida por um LED no TCRT5000. A luz é pulsante para que o programa consiga comparar a reflexão com o LED aceso e apagado de forma a compensar variações da luz ambiente. Após ser refletida, a luz é captada por um fototransistor que converte a intensidade da luz em um sinal elétrico medido pelo Arduino.
 
 # Modo de Uso
 Com o colibrino devidamente montado para usá-lo basta mexer a cabeça com o oculos que está instalado o sensor. Contudo, segue abaixo uma lista de orientações.
