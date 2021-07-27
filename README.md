@@ -55,7 +55,7 @@ Nome|Especificação|Documentação|
 |Módulo de rádio ESP32|Microcontrolador Bluetooth compatível com Arduino||
 |Bateria recarregável 3.7v|Fonte de Energia||
 |Carregador de bateria e regulador de tensão |Gerenciamento da fonte de energia||
-|MPU6050|Acelerômetro e Giroscópio|[datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)|
+|MPU-6050|Acelerômetro e Giroscópio|[datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)|
 |TCRT 5000|Sensor Infravermelho|[datasheet](https://www.vishay.com/docs/83760/tcrt5000.pdf)|
 |Cabo com 6 vias|Ligação entre o Arduino e os Sensores - |[Ex.: cabo para alarme](https://stecondutores.com.br/produto/cabo-de-alarme/)|
 |Placa padrão ou protoboard|Base para montagem do circuito||
@@ -69,6 +69,20 @@ Nome|Especificação|Documentação|
 A montagem descrita e representada a seguir é da versão com fio do Colibrino. Em breve iremos apresentar a versão sem fio. 
 ## Diagrama Esquemático
 ![Diagrama esquemático|617x512,20%](./doc/protoboard-diagram.jpeg)
+## Tabela de Conexões
+Nome do Pino no Arduino|Componentes Conectados|Resistor?
+|---|---|---|
+|VCC (3.3 ou 5V)|MPU-6050 VCC|  |
+|VCC (3.3 ou 5V)|TCRT5000 Coletor do Fototransistor| 3500Ω a 5000Ω |
+|GND |MPU-6050 GND| |
+|GND |TCRT5000 Emissor do Fototransistor| |
+|GND |TCRT5000 Cátodo do LED IR (-)|  |
+|GND |Buzzer (-)| |
+|16 |Buzzer (+)| 0Ω a 10Ω |
+|15 |TCRT5000 Ânodo do LED IR (+)| 180Ω a 330Ω |
+|A0 |TCRT5000 Coletor do Fototransistor| |
+
+
 ## Instruções de Montagem
 1. Conecte o Arduíno, Buzzer, Leds e Resistores no Protoboard. 
 2. Para os sensores MPU6050 e TCRT 5000 é necessário solda-los com o fio de 6 vias.
