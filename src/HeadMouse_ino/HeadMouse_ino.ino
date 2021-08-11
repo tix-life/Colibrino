@@ -876,7 +876,7 @@ void AcionadorPiscada_refresh()
   if(horaDoPrint)
   {
     // Faz a correção da leitura do sensor para desconsiderar a luz ambiente
-    sensorValue = sensorValueOff - sensorValueOn;
+    sensorValue = abs(sensorValueOff - sensorValueOn);
     Serial.println(sensorValue);
 
     // M�quinas de estado que interessam:
