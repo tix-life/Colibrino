@@ -43,7 +43,7 @@ O Colibrino possui duas versões:
 |Cabo com 6 vias|Ligação entre o Arduino e os Sensores - |[Ex.: cabo para alarme](https://stecondutores.com.br/produto/cabo-de-alarme/)|
 |Placa padrão ou protoboard|Base para montagem do circuito||
 |Leds|Indicador de piscada e de funcionamento||
-|Resistor|1 x 4700Ω a 6800Ω - polarização do fototransistor <br> 1 x 180Ω a 330Ω - restringe corrente do LED IR<br> 1 x 10Ω - atenuar o  buzzer||
+|Resistor|1 x 4700Ω a 6800Ω - polarização do fototransistor <br> 1 x 220Ω a 330Ω - restringe corrente do LED IR<br> 1 x 10Ω - atenuar o  buzzer||
 |Buzzer|Indicador Sonoro da Piscada||
 |Cabo USB|Conexão entre computador e Arduíno||
 |Armação de Óculos|Suporte para os sensores||
@@ -60,7 +60,7 @@ Nome|Especificação|Documentação|
 |Cabo com 6 vias|Ligação entre o Arduino e os Sensores - |[Ex.: cabo para alarme](https://stecondutores.com.br/produto/cabo-de-alarme/)|
 |Placa padrão ou protoboard|Base para montagem do circuito||
 |Leds|Indicador de piscada e de funcionamento||
-|Resistor|1 x 3500Ω a 5000Ω - polarização do fototransistor <br> 1 x 120Ω a 220Ω - restringe corrente do LED IR<br> 1 x 10Ω - atenuar o  buzzer||
+|Resistor|1 x 4700Ω a 6800Ω - polarização do fototransistor <br> 1 x 220Ω a 330Ω - restringe corrente do LED IR<br> 1 x 10Ω - atenuar o  buzzer||
 |Buzzer|Indicador Sonoro da Piscada||
 |Cabo USB|Conexão entre computador e Arduíno||
 |Armação de Óculos|Suporte para os sensores||
