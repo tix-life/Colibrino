@@ -88,9 +88,10 @@ Nome do Pino no Arduino|Componentes Conectados|Resistor?
 2. Para os sensores MPU6050 e TCRT 5000 é necessário solda-los com o fio de 6 vias.
 3. Realize as coneções mostradas no diagrama acima.
 4. Conecte o Arduíno ao PC usando o cabo USB.
-5. Instale o código utilizando o ambiente de desenvolvimento do Arduino devidamente configurado para a placa que está sendo usada.
-6. Fixe o sensor MPU6050 em alguma armação de óculos.
-7. Use e aproveite. :D
+5. Grave o firmware no Arduino usando o [Arduino IDE](https://www.arduino.cc/en/software). No menu "Ferramentas", escolha a opção Arduino Leonardo na lista de placas.
+6. Instale o código utilizando o ambiente de desenvolvimento do Arduino devidamente configurado para a placa que está sendo usada.
+7. Fixe o sensor MPU6050 em alguma armação de óculos.
+8. Use e aproveite. :D
 
 (montar um painel com imagens)
 
