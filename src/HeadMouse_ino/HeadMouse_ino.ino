@@ -238,7 +238,7 @@ int contLiberaPiscada = 0;
 
 
 #define LIMIAR_BORDA_SUBIDA    10
-#define LIMIAR_BORDA_DESCIDA  10
+#define LIMIAR_BORDA_DESCIDA  8
 
 //visualization
 int duration = 100;        // Length of visualization
@@ -459,7 +459,7 @@ void MaquinaBordas (void)
 
 
 
-#define DERIVADA_LIMIAR_BORDA_SUBIDA  3.4//2.5
+#define DERIVADA_LIMIAR_BORDA_SUBIDA  4//2.5
 #define DERIVADA_LIMIAR_BORDA_DESCIDA  -3.4//-2.5
 #define DERIVADA_LIMIAR_BORDA_SUBIDA_2  1.0 //0.4
 #define DERIVADA_LIMIAR_BORDA_DESCIDA_2  -1.0 //0.4
@@ -542,8 +542,8 @@ void MaquinaBordas (void)
 		  // REMOVENDO BIPES LEGADOS AcionadorPiscada_acionamentoBuzzer (OFF);
         }
 
-#define DELTA_BASELINE_UP 10
-#define DELTA_BASELINE_DOWN 7
+#define DELTA_BASELINE_UP 12
+#define DELTA_BASELINE_DOWN 5
 
         if ((derivada < DERIVADA_LIMIAR_BORDA_DESCIDA) || (derivada > DERIVADA_LIMIAR_BORDA_SUBIDA))
         {
