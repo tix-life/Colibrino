@@ -149,6 +149,68 @@ uint8_t mouseVert(void)
   }
   return vertValue;
 }
+
+
+/*********************************************************************
+ * @fn      scrollDetector
+ * 
+ * @brief   Ativa ou reativa o Colibri de acordo com a 
+ *          sequencia de movimentos feita
+ *
+ * @param   horz - derivada do Yaw
+ * @param   verti - derivada do Pitch
+ *
+ * @return  ligado - flag para ativar/desativar o colibri.
+ */
+#define RMEDIA 0.001f
+#define RMARGEM 10
+int scrollDetector() {
+  static float rmedia = 90;
+  static uint32_t timer1 = 0;
+  int diferenca;
+  
+  diferenca = roll_mahony - rmedia;
+  
+  
+            //SendInt(diferenca);
+         //SendLineEnd();
+  
+  if (abs(diferenca) < RMARGEM) {
+    rmedia = ((1 - RMEDIA) * rmedia) + (RMEDIA * roll_mahony);
+    timer1 = millis();
+    return 0;
+  }
+  else if (abs(diferenca) > 2.5*RMARGEM) { // Ignora roll muito grande
+    if (millis() - timer1 > 5000) {       // Reseta média se ficar muito tempo com roll alto
+      rmedia = roll_mahony;
+      timer1 = millis();
+    }
+    return 0;
+  }
+  else if (millis() - timer1 > 200) {
+    timer1 = millis();
+    if (diferenca > 0) {
+      return 1 ;//+ (2 * diferenca / RMARGEM);
+    }
+    else {
+      return -1;// + (2 * diferenca / RMARGEM);
+    }
+  }
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 void setup() 
 {
   Wire.begin();
@@ -157,7 +219,6 @@ void setup()
   MPU6050_Init();
   // pinMode(ACIONADOR,INPUT);
   eyeBlinkSetup();
-  
 }
 
 void loop() 
@@ -165,10 +226,11 @@ void loop()
   static int printDivider = 10;
   static int estado = 0;
   uint8_t xchg = 0,ychg = 0;
+  int scroll =0;
   bool estadoAcionador = false;
   static int contador = 0;
 
- eyeBlinkRefresh();
+  eyeBlinkRefresh();
 
   mpu6050_GetData();
   filtraIMU();
@@ -177,8 +239,8 @@ void loop()
   getRollPitchYaw_mahony();
   xchg = mouseHoriz();
   ychg = mouseVert();
-
-  Mouse.move(xchg, ychg, 0);                                      // move mouse on x axis
+  scroll = scrollDetector();
+  Mouse.move(xchg, ychg, scroll);                                      // move mouse on x axis
   
   //if (g_novaPiscada) Mouse.click();
   
