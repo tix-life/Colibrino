@@ -9,8 +9,6 @@ Esse é um projeto open-source de uma versão *Faça você mesmo* do nosso mouse
 - [Índice](#índice)
 - [Licença de Uso](#licença-de-uso)
 - [Materiais:](#materiais)
-  - [Versão com fio](#versão-com-fio)
-  - [Versão Bluetooth (Desenvolvimento)](#versão-bluetooth-desenvolvimento)
 - [Montagem:](#montagem)
   - [Diagrama Esquemático](#diagrama-esquemático)
   - [Instruções de Montagem](#instruções-de-montagem)
@@ -32,30 +30,12 @@ a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 
 
 # Materiais:
-O Colibrino possui duas versões:
-## Versão com fio
+
 
 |Nome|Especificação|Documentação|
 |---|---|---|
 |Arduino Leonardo ou Micro Pro|Com Microcontrolador Atmega 32U4|[Pinagem Pro Micro](https://cdn.sparkfun.com/assets/f/d/8/0/d/ProMicro16MHzv2.pdf)<br>[Pinagem Leonardo](https://content.arduino.cc/assets/Pinout-Leonardo_latest.png)|
 |MPU6050|Acelerômetro e Giroscópio|[datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)|
-|TCRT 5000|Sensor Infravermelho|[datasheet](https://www.vishay.com/docs/83760/tcrt5000.pdf)|
-|Cabo com 6 vias|Ligação entre o Arduino e os Sensores - |[Ex.: cabo para alarme](https://stecondutores.com.br/produto/cabo-de-alarme/)|
-|Placa padrão ou protoboard|Base para montagem do circuito||
-|Leds|Indicador de piscada e de funcionamento||
-|Resistor|1 x 4700Ω a 6800Ω - polarização do fototransistor <br> 1 x 220Ω a 330Ω - restringe corrente do LED IR<br> 1 x 10Ω - atenuar o  buzzer||
-|Buzzer|Indicador Sonoro da Piscada||
-|Cabo USB|Conexão entre computador e Arduíno||
-|Armação de Óculos|Suporte para os sensores||
-
-## Versão Bluetooth (em desenvolvimento)
-
-Nome|Especificação|Documentação|
-|---|---|---|
-|Módulo de rádio ESP32|Microcontrolador Bluetooth compatível com Arduino||
-|Bateria recarregável 3.7v|Fonte de Energia||
-|Carregador de bateria e regulador de tensão |Gerenciamento da fonte de energia||
-|MPU-6050|Acelerômetro e Giroscópio|[datasheet](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)|
 |TCRT 5000|Sensor Infravermelho|[datasheet](https://www.vishay.com/docs/83760/tcrt5000.pdf)|
 |Cabo com 6 vias|Ligação entre o Arduino e os Sensores - |[Ex.: cabo para alarme](https://stecondutores.com.br/produto/cabo-de-alarme/)|
 |Placa padrão ou protoboard|Base para montagem do circuito||
