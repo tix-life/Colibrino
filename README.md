@@ -68,7 +68,7 @@ Nome|Especificação|Documentação|
 # Montagem:
 A montagem descrita e representada a seguir é da versão com fio do Colibrino. Em breve iremos apresentar a versão sem fio. 
 ## Diagrama Esquemático
-![Diagrama esquemático|617x512,20%](./doc/protoboard-diagram.jpeg)
+![Diagrama esquemático|617x512,20%](./doc/protoboard-diagram.jpg)
 ## Tabela de Conexões
 Nome do Pino no Arduino|Componentes Conectados|Resistor?
 |---|---|---|
