@@ -8,13 +8,13 @@ Esse é um projeto open-source de uma versão *Faça você mesmo* do nosso mouse
 - [Colibrino](#colibrino)
 - [Índice](#índice)
 - [Licença de Uso](#licença-de-uso)
-- [Materiais:](#materiais)
-- [Montagem:](#montagem)
+- [Materiais](#materiais)
+- [Montagem](#montagem)
   - [Diagrama Esquemático](#diagrama-esquemático)
   - [Instruções de Montagem](#instruções-de-montagem)
 - [Modo de Uso](#modo-de-uso)
 - [Plano de Voo 🐦](#plano-de-voo-)
-- [Materiais de referência:](#materiais-de-referência)
+- [Materiais de referência](#materiais-de-referência)
 
 # Licença de Uso
 Este programa é um software livre. Você pode redistribuí-lo e/ou
@@ -28,9 +28,7 @@ a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 [Licença Pública Geral GNU](https://github.com/tix-life/Colibrino/blob/master/LICENSE) para mais detalhes.
 
 
-
 # Materiais:
-
 
 |Nome|Especificação|Documentação|
 |---|---|---|
@@ -46,7 +44,9 @@ a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 |Armação de Óculos|Suporte para os sensores||
 
 # Montagem:
-A montagem descrita e representada a seguir é da versão com fio do Colibrino. Em breve iremos apresentar a versão sem fio. 
+
+[![Vídeo Tutorial](https://yt-embed.herokuapp.com/embed?v=DUF2yonN9Ps)](https://www.youtube.com/watch?v=DUF2yonN9Ps "[PASSO A PASSO] COLIBRINO ")
+
 ## Diagrama Esquemático
 ![Diagrama esquemático|617x512,20%](./doc/protoboard-diagram.jpg)
 ## Tabela de Conexões
