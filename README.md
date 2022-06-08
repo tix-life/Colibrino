@@ -3,6 +3,8 @@ Esse é um projeto open-source de uma versão *Faça você mesmo* do nosso mouse
 
 ![Diagrama esquemático|617x512,20%](./doc/header.jpeg)
 
+[Compartilhe sua montagem e suas dúvidas no nosso fórum!](https://groups.google.com/g/colibrino) 
+
 # Índice 
 
 - [Colibrino](#colibrino)
@@ -72,6 +74,8 @@ Nome do Pino no Arduino|Componentes Conectados|Resistor?
 6. Instale o código utilizando o ambiente de desenvolvimento do Arduino devidamente configurado para a placa que está sendo usada.
 7. Fixe o sensor MPU6050 em alguma armação de óculos.
 8. Use e aproveite. :D
+9. [Compartilhe sua montagem e suas dúvidas no nosso fórum!](https://groups.google.com/g/colibrino) 
+
 
 (montar um painel com imagens)
 
