@@ -23,7 +23,9 @@
 //---------------------------------------------------------------------------------------------------
 //Definitions
 //Mouse
-#define SENSIBILIDADE  30;
+#define SENSIBILIDADE  30
+#define TEMPO_DWELL_CICK_MS 1100 
+#define DWELL_CICK true
 //
 #define MPU6050_ACC_GAIN 16384.0
 #define MPU6050_GYRO_GAIN 131.072 
@@ -47,7 +49,6 @@ extern float yaw_mahony,pitch_mahony,roll_mahony;
 
 #define INTERRUPT_PIN 7 // use pin 2 on Arduino Uno & most boards
 #define LED_PIN 8 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
-bool blinkState = false;
 
 #define ON true
 #define OFF false
@@ -623,6 +624,7 @@ float derivaPitch(float sinal)
 }
 
 
+
 void setup() 
 {
   Wire.begin();
@@ -660,6 +662,7 @@ void loop()
   //   ychg = 0;
   //   scroll = 0;
   // }
+  dwellClick(xchg, xchg, scroll);
   Mouse.move(xchg, ychg, scroll);                                      // move mouse on x axis
   
   //if (g_novaPiscada) Mouse.click();
@@ -791,6 +794,39 @@ long CalculaDerivada (void);
 void SalvarPiscada (int valorPicoDerivadaP, int valorPicoDerivadaN, int tempoEntrePicos);
 void CalibrarPiscada (void);
 
+void dwellClick(int x, int y, int s)
+{
+  static uint32_t timestamp = 0;
+  static bool clickReady = false;
+
+  if (!DWELL_CICK) return;
+  
+  if (x == 0 && y == 0 && s == 0) {
+    if ( g_clique == 0 && clickReady) {
+      if (millis() - timestamp > TEMPO_DWELL_CICK_MS)
+      {
+        clickReady = false;
+        if (millis() > 5000) Mouse.press();
+        g_clique = 1;
+        digitalWrite(ledPin, HIGH);
+      }
+    }
+  }
+  else {
+    Mouse.release();
+    digitalWrite(ledPin, LOW);
+    g_clique = 0;
+    timestamp = millis();
+    clickReady = true;
+  }
+  
+  if (g_clique && (millis() - timestamp > TEMPO_DWELL_CICK_MS + 50)) // Holds click for 50ms
+  {
+    Mouse.release();
+    digitalWrite(ledPin, LOW);
+    g_clique = 0;
+  }
+}
 
 void eyeBlinkSetup() {
 
@@ -1353,14 +1389,16 @@ void SalvarPiscada (int valorPicoDerivadaP, int valorPicoDerivadaN, int tempoEnt
 
 void AcionadorPiscada_acionamentoRele(bool on_off)
 {
-  if (on_off) {
-    Mouse.press();
-    g_clique = 1;
-    digitalWrite(ledPin, HIGH);
-  } else {
-    Mouse.release();
-    digitalWrite(ledPin, LOW);
-    g_clique = 0;
+  if (!DWELL_CICK) {
+    if (on_off) {
+      Mouse.press();
+      g_clique = 1;
+      digitalWrite(ledPin, HIGH);
+    } else {
+      Mouse.release();
+      digitalWrite(ledPin, LOW);
+      g_clique = 0;
+    }
   }
 }
 
