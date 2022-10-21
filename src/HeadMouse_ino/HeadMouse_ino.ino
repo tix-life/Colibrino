@@ -24,8 +24,8 @@
 //Definitions
 //Mouse
 #define SENSIBILIDADE  30
-#define TEMPO_DWELL_CICK_MS 1100 
-#define DWELL_CICK true
+#define TEMPO_DWELL_CICK_MS 1000 
+#define DWELL_CICK false
 //
 #define MPU6050_ACC_GAIN 16384.0
 #define MPU6050_GYRO_GAIN 131.072 
@@ -662,7 +662,7 @@ void loop()
   //   ychg = 0;
   //   scroll = 0;
   // }
-  dwellClick(xchg, xchg, scroll);
+  dwellClick(xchg, ychg, scroll);
   Mouse.move(xchg, ychg, scroll);                                      // move mouse on x axis
   
   //if (g_novaPiscada) Mouse.click();
