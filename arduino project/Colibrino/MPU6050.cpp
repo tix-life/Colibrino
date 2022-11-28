@@ -1,6 +1,6 @@
 #include "mpu6050.h"
 
-int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
+extern int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
 
 void MPU6050_Init(){
   // MPU6050 Initializing & Reset
