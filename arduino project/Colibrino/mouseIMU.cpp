@@ -4,6 +4,8 @@ extern float yaw_mahony, pitch_mahony, roll_mahony;
 int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
 float axR, ayR, azR, gxR, gyR, gzR;
 float axg, ayg, azg, gxrs, gyrs, gzrs;
+float GyX_offset, GyY_offset, GyZ_offset;
+
 int g_clique = 0;
 
 void filtraIMU() {
@@ -19,11 +21,54 @@ void filtraIMU() {
   axg = (float)(AcX /*- LSM6DSM_AXOFFSET*/) / MPU6050_ACC_GAIN;
   ayg = (float)(AcY /*- LSM6DSM_AYOFFSET*/) / MPU6050_ACC_GAIN;
   azg = (float)(AcZ /*- LSM6DSM_AZOFFSET*/) / MPU6050_ACC_GAIN;
-  gxrs = (float)(GyX - (0)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
-  gyrs = (float)(GyY - (0)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
-  gzrs = (float)(GyZ - (0)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
+  gxrs = (float)(GyX - (GyX_offset)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
+  gyrs = (float)(GyY - (GyY_offset)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
+  gzrs = (float)(GyZ - (GyZ_offset)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
   // Degree to Radians Pi / 180 = 0.01745329 0.01745329251994329576923690768489
 }
+enum
+{
+  state_gx = 0,
+  state_gy,
+  state_gz,
+};
+#define SAMPLES 100
+bool IMU_calibration()
+{
+    static bool calibrated = false;
+    static int state = 0;
+    static int32_t counter = 0;
+    static int32_t samples_x = 0;
+    static int32_t samples_y = 0;
+    static int32_t samples_z = 0;
+
+    if(calibrated== false)
+    {           
+        digitalWrite(16, HIGH);
+        if(counter < SAMPLES)
+        {
+          samples_x+=GyX;
+          samples_y+=GyY;
+          samples_z+=GyZ;
+        }
+        else
+        {
+            GyX_offset = samples_x/SAMPLES;
+            GyY_offset = samples_y/SAMPLES;
+            GyZ_offset = samples_z/SAMPLES;
+            calibrated = true;
+        }
+        counter ++;
+    }
+    else
+    {
+      digitalWrite(16, LOW);
+    }
+
+    return calibrated;
+}
+
+
 float corrigeYaw(float sinal) {
   static float valorDeriv = 0, zero = 0;
   static float sinalCorrigido = 0, offset = 0;

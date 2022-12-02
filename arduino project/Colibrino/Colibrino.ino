@@ -19,7 +19,6 @@
 #include "mpu6050.h"
 #include "blink.h"
 #include "mouseIMU.h"
-
 //---------------------------------------------------------------------------------------------------
 //Definitions
 //Mouse
@@ -39,6 +38,7 @@ extern int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
 extern float yaw_mahony, pitch_mahony, roll_mahony;
 extern float axR, ayR, azR, gxR, gyR, gzR;
 extern float axg, ayg, azg, gxrs, gyrs, gzrs;
+
 //Objects
 // BleMouse bleMouse;
 // filters pbax,pbay,pbaz,pbgx,pbgy,pbgz;
@@ -46,12 +46,10 @@ extern float axg, ayg, azg, gxrs, gyrs, gzrs;
 #define INTERRUPT_PIN 7  // use pin 2 on Arduino Uno & most boards
 #define LED_PIN 8        // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 
-#define ON true
-#define OFF false
 extern int g_clique;
 
-
-void setup() {
+void setup() 
+{
   Wire.begin();
   Wire.setClock(100000);  // 400kHz I2C clock. Comment this line if having compilation difficulties
   delay(100);
@@ -59,8 +57,8 @@ void setup() {
   // pinMode(ACIONADOR,INPUT);
   eyeBlinkSetup();
 }
-int8_t gesto = INVALIDO;
 
+int8_t gesto = INVALIDO;
 
 void loop() 
 {
@@ -70,28 +68,59 @@ void loop()
   int scroll = 0;
   bool estadoAcionador = false;
   static int contador = 0;
+  static bool IMUcalibrate = false;
+  static int counter = 0;
+  static int subcounter = 10;
 
-  eyeBlinkRefresh();
 
+  // eyeBlinkRefresh();
   mpu6050_GetData();
   filtraIMU();
-  //MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
-  MahonyAHRSupdateIMU(gyrs, gzrs, gxrs, ayg, azg, axg);
-  getRollPitchYaw_mahony();
-  xchg = mouseHoriz();
-  ychg = mouseVert();
-  gesto = maquinaGestos_v2(derivaYaw(yaw_mahony), derivaPitch(pitch_mahony), g_clique);
-  // atividade = interpretaGestos(gesto);
-  scroll = scrollDetector();
-  // if(atividade == false)
-  // {
-  //   xchg = 0;
-  //   ychg = 0;
-  //   scroll = 0;
-  // }
-  dwellClick(xchg, ychg, scroll);
-  Mouse.move(xchg, ychg, scroll);  // move mouse on x axis
+  if(counter<3000)
+  {
+    if(--subcounter == 0)
+    {
+      subcounter = 10;
+      digitalWrite(16, HIGH);
+    }
+    digitalWrite(16, LOW);
 
-  //if (g_novaPiscada) Mouse.click();
+  }
+  else if(IMU_calibration())
+  {
+    //MahonyAHRSupdateIMU( gxrs,  gyrs,  gzrs , axg,  ayg,  azg);
+    MahonyAHRSupdateIMU(gyrs, gzrs, gxrs, ayg, azg, axg);
+    getRollPitchYaw_mahony();
+    xchg = mouseHoriz();
+    ychg = mouseVert();
+
+    gesto = maquinaGestos_v2(derivaYaw(yaw_mahony), derivaPitch(pitch_mahony), g_clique);
+    // atividade = interpretaGestos(gesto);
+    scroll = scrollDetector();
+    // if(atividade == false)
+    // {
+    //   xchg = 0;
+    //   ychg = 0;
+    //   scroll = 0;
+    // }
+    dwellClick(xchg, ychg, scroll);
+    Mouse.move(xchg, ychg, scroll);  // move mouse on x axis
+    //if (g_novaPiscada) Mouse.click();
+  }
+  counter ++;
+  Serial.print(gyrs);
+  Serial.print(" ");
+  Serial.print(gzrs);
+  Serial.print(" ");
+  Serial.print(gxrs);
+  // Serial.print(ayg);
+  // Serial.print(" ");
+  // Serial.print(azg);
+  // Serial.print(" ");
+  // Serial.print(axg);
+  Serial.print(" ");
+  Serial.println();
+
+
 }
 

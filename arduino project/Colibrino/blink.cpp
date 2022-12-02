@@ -557,11 +557,11 @@ void MaquinaPiscadas(void) {
 
               //printão:
               for (i = 0; i < MAX_PISCADAS_PARA_CALIBRAR; i++) {
-                Serial.print(g_bufferPiscadas[i].picoP);
-                Serial.print(";");
-                Serial.print(g_bufferPiscadas[i].picoN);
-                Serial.print(";");
-                Serial.println(g_bufferPiscadas[i].duracao);
+                // Serial.print(g_bufferPiscadas[i].picoP);
+                // Serial.print(";");
+                // Serial.print(g_bufferPiscadas[i].picoN);
+                // Serial.print(";");
+                // Serial.println(g_bufferPiscadas[i].duracao);
               }
 
               CalibrarPiscada();
@@ -668,7 +668,7 @@ void AcionadorPiscada_refresh() {
   if (horaDoPrint) {
     // Faz a correção da leitura do sensor para desconsiderar a luz ambiente
     sensorValue = abs(sensorValueOff - sensorValueOn);
-    Serial.println(sensorValue);
+    // Serial.println(sensorValue);
 
     // M�quinas de estado que interessam:
     MaquinaMedias();
