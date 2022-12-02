@@ -19,6 +19,7 @@
 #include "mpu6050.h"
 #include "blink.h"
 #include "mouseIMU.h"
+
 //---------------------------------------------------------------------------------------------------
 //Definitions
 //Mouse
@@ -108,18 +109,18 @@ void loop()
     //if (g_novaPiscada) Mouse.click();
   }
   counter ++;
-  Serial.print(gyrs);
-  Serial.print(" ");
-  Serial.print(gzrs);
-  Serial.print(" ");
-  Serial.print(gxrs);
-  // Serial.print(ayg);
+  // Serial.print(gyrs);
   // Serial.print(" ");
-  // Serial.print(azg);
+  // Serial.print(gzrs);
   // Serial.print(" ");
-  // Serial.print(axg);
-  Serial.print(" ");
-  Serial.println();
+  // Serial.print(gxrs);
+  // // Serial.print(ayg);
+  // // Serial.print(" ");
+  // // Serial.print(azg);
+  // // Serial.print(" ");
+  // // Serial.print(axg);
+  // Serial.print(" ");
+  // Serial.println();
 
 
 }

@@ -1,4 +1,22 @@
 #include "mouseIMU.h"
+#include <EEPROM.h>
+int addr_eep = 0;
+typedef struct 
+{
+  int32_t x;
+  int32_t y;
+  int32_t z;
+
+} calibration_t;
+
+typedef union 
+{
+  calibration_t xyz;
+  uint8_t buffer[12];
+}calibrationUnion_t;
+
+calibrationUnion_t calibValues;
+
 extern float yaw_mahony, pitch_mahony, roll_mahony;
 
 int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
@@ -21,9 +39,9 @@ void filtraIMU() {
   axg = (float)(AcX /*- LSM6DSM_AXOFFSET*/) / MPU6050_ACC_GAIN;
   ayg = (float)(AcY /*- LSM6DSM_AYOFFSET*/) / MPU6050_ACC_GAIN;
   azg = (float)(AcZ /*- LSM6DSM_AZOFFSET*/) / MPU6050_ACC_GAIN;
-  gxrs = (float)(GyX - (GyX_offset)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
-  gyrs = (float)(GyY - (GyY_offset)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
-  gzrs = (float)(GyZ - (GyZ_offset)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
+  gxrs = (float)(GyX - (calibValues.xyz.x)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
+  gyrs = (float)(GyY - (calibValues.xyz.y)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
+  gzrs = (float)(GyZ - (calibValues.xyz.z)) / MPU6050_GYRO_GAIN * 0.01745329;  //degree to radians
   // Degree to Radians Pi / 180 = 0.01745329 0.01745329251994329576923690768489
 }
 enum
@@ -41,8 +59,26 @@ bool IMU_calibration()
     static int32_t samples_x = 0;
     static int32_t samples_y = 0;
     static int32_t samples_z = 0;
-
-    if(calibrated== false)
+    byte value;
+    
+    //Read eeprom to look if the calibration has happened once
+    value = EEPROM.read(addr_eep);
+    
+    if( value == 1)
+    {
+      calibrated = true;
+      //copy the previous calibration offsets  
+      int i = 0;
+      for(i = 0;i<12;i++)
+      {
+        calibValues.buffer[i] = EEPROM.read(addr_eep+i+1);
+      }
+      Serial.print(value);
+      Serial.print(" ");
+      Serial.println();
+      //TODO
+    }
+    else if(calibrated== false )
     {           
         digitalWrite(16, HIGH);
         if(counter < SAMPLES)
@@ -56,6 +92,16 @@ bool IMU_calibration()
             GyX_offset = samples_x/SAMPLES;
             GyY_offset = samples_y/SAMPLES;
             GyZ_offset = samples_z/SAMPLES;
+            calibValues.xyz.x = GyX_offset;
+            calibValues.xyz.y = GyY_offset;
+            calibValues.xyz.z = GyZ_offset;
+
+            EEPROM.write(addr_eep, 1);
+            int i = 0;
+            for(i = 0;i<12;i++)
+            {
+              EEPROM.write(addr_eep+i+1, calibValues.buffer[i]);
+            }
             calibrated = true;
         }
         counter ++;
@@ -64,7 +110,7 @@ bool IMU_calibration()
     {
       digitalWrite(16, LOW);
     }
-
+    
     return calibrated;
 }
 
