@@ -33,13 +33,13 @@ bool conectado = false;
 //float yaw_filtro, pitch_filtro, roll_filtro;
 const int MPU_addr = 0x68;  // I2C address of the MPU-6050
 /*********************************************************************
- * External variables
+ * External ariables
  */
 extern int16_t AcX, AcY, AcZ, Tmp, GyX, GyY, GyZ;
 extern float yaw_mahony, pitch_mahony, roll_mahony;
 extern float axR, ayR, azR, gxR, gyR, gzR;
 extern float axg, ayg, azg, gxrs, gyrs, gzrs;
-
+extern bool g_novaPiscada;
 //Objects
 // BleMouse bleMouse;
 // filters pbax,pbay,pbaz,pbgx,pbgy,pbgz;
@@ -74,7 +74,7 @@ void loop()
   static int subcounter = 10;
 
 
-  // eyeBlinkRefresh();
+  eyeBlinkRefresh();
   mpu6050_GetData();
   filtraIMU();
   if(counter<3000)
@@ -95,7 +95,7 @@ void loop()
     xchg = mouseHoriz();
     ychg = mouseVert();
 
-    gesto = maquinaGestos_v2(derivaYaw(yaw_mahony), derivaPitch(pitch_mahony), g_clique);
+    //gesto = maquinaGestos_v2(derivaYaw(yaw_mahony), derivaPitch(pitch_mahony), g_clique);
     // atividade = interpretaGestos(gesto);
     scroll = scrollDetector();
     // if(atividade == false)
@@ -104,9 +104,12 @@ void loop()
     //   ychg = 0;
     //   scroll = 0;
     // }
-    dwellClick(xchg, ychg, scroll);
+    //dwellClick(xchg, ychg, scroll);
     Mouse.move(xchg, ychg, scroll);  // move mouse on x axis
-    //if (g_novaPiscada) Mouse.click();
+    if (g_novaPiscada)
+    {
+       Mouse.click();
+    }
   }
   counter ++;
   // Serial.print(gyrs);
