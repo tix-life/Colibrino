@@ -69,7 +69,6 @@ void loop()
   int scroll = 0;
   bool estadoAcionador = false;
   static int contador = 0;
-  static bool IMUcalibrate = false;
   static int counter = 0;
   static int subcounter = 10;
 
