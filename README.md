@@ -48,6 +48,7 @@ a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 # Montagem:
 
 [![Thumbnail do vídeo](https://img.youtube.com/vi/DUF2yonN9Ps/maxresdefault.jpg)](https://www.youtube.com/watch?v=DUF2yonN9Ps)
+[Vídeo tutorial](https://www.youtube.com/watch?v=DUF2yonN9Ps)
 
 ## Diagrama Esquemático
 ![Diagrama esquemático|617x512,20%](./doc/protoboard-diagram.jpg)
