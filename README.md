@@ -109,6 +109,9 @@ Existe inumeras funções que podem ser adcionadas ao Colibrino e algumas que es
 Estamos abertos a sugestões e feedbacks a todos :D 
 Agradecemos a leitura <3
 
+# FAQ
+* Dúvidas frequentes anexadas no documento abaixo: https://docs.google.com/document/d/1n8rUOnNmSkuknlO98TbDd7EEdKiDvEBH_lRSuz5WyO0/edit?usp=sharing
+
 # Materiais de referência:
 * https://www.youtube.com/watch?v=4sIkW7wogrE
 * https://github.com/witnessmenow/arduino-switcheroonie/blob/master/BLE-switcheroonie/BLE-switcheroonie.ino
