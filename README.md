@@ -47,7 +47,7 @@ a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 
 # Montagem:
 
-[![Vídeo Tutorial](https://yt-embed.herokuapp.com/embed?v=DUF2yonN9Ps)](https://www.youtube.com/watch?v=DUF2yonN9Ps "[PASSO A PASSO] COLIBRINO ")
+[![Thumbnail do vídeo](https://img.youtube.com/vi/DUF2yonN9Ps/maxresdefault.jpg)](https://www.youtube.com/watch?v=DUF2yonN9Ps)
 
 ## Diagrama Esquemático
 ![Diagrama esquemático|617x512,20%](./doc/protoboard-diagram.jpg)
@@ -72,7 +72,7 @@ Nome do Pino no Arduino|Componentes Conectados|Resistor?
 4. Conecte o Arduíno ao PC usando o cabo USB.
 5. Grave o firmware no Arduino usando o [Arduino IDE](https://www.arduino.cc/en/software). No menu "Ferramentas", escolha a opção Arduino Leonardo na lista de placas.
 6. Instale o código utilizando o ambiente de desenvolvimento do Arduino devidamente configurado para a placa que está sendo usada.
-7. Deixe o Colibrino parado numa mesa sem perturbações até que um beep sonoro indique que ele está pronto para uso (nesse momento ele está calibrando). A calibração é feita apenas uma vez e se não ficar boa siga as intruções nna seção Calibração.
+7. Deixe o Colibrino parado numa mesa sem perturbações até que um beep sonoro indique que ele está pronto para uso (nesse momento ele está calibrando). A calibração é feita apenas uma vez e se não ficar boa (Cursor andando sozinho em alguma direção mesmo o collibrino parado) siga as intruções na seção Calibração.
 8. Fixe o sensor MPU6050 em alguma armação de óculos.
 9. Use e aproveite. :D
 10. [Compartilhe sua montagem e suas dúvidas no nosso fórum!](https://groups.google.com/g/colibrino) 
@@ -87,7 +87,7 @@ O Colibrino utiliza um tipo de sensor chamado de IMU (Unidade de Medidas Inercia
 ## Detecção da piscadela
 O sensor de piscadelas detecta pequenas variações na reflexão de luz que ocorrem quando uma piscada bem forte é realizada em frente ao sensor. Primeiro a luz infravermelha é emitida por um LED no TCRT5000. A luz é pulsante para que o programa consiga comparar a reflexão com o LED aceso e apagado de forma a compensar variações da luz ambiente. Após ser refletida, a luz é captada por um fototransistor que converte a intensidade da luz em um sinal elétrico medido pelo Arduino.
 
-## Calibração
+## ⚠️ Calibração
 
 A calibração efetuada após a primeira gravação do programa no colibrino é feita apenas uma vez. Contudo ela pode falhar devido a movimentações no colibrino durante o processo de calibração, levando a um mau funcionamento do aparelho. Para resolver isso , grave o código LimparCalibração que está dentro da pasta baixada e regrave o código principal mais uma vez. Isso levará o Colibrino para a mesma fase inicial de calibração, repita o procedimento de esperar até que o tempo de calibração conclua.
 
